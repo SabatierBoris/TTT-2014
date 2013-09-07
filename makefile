@@ -6,10 +6,15 @@ UPLOADFLAGS=-r
 COMMONS_DIR=./commons
 
 WALKER_DIR=./walker-2014
-WALKER_TARGET=$(shell $(MAKE) -s -C $(WALKER_DIR) get_target)
 
 
 all: commons walker
+
+test: all
+	@echo "$(SPACE)Testing commons"
+	@$(MAKE) -s -C $(COMMONS_DIR) SPACE=" - " $@
+	@echo "$(SPACE)Testing walker"
+	@$(MAKE) -s -C $(WALKER_DIR) SPACE=" - " $@
 
 commons: 
 	@echo "$(SPACE)Building $@"
@@ -20,7 +25,7 @@ walker: commons
 	@$(MAKE) -s -C $(WALKER_DIR) SPACE=" - "
 
 runWalker: walker
-	@$(UPLOAD) $(UPLOADFLAGS) $(WALKER_TARGET)
+	@$(MAKE) -s -C $(WALKER_DIR) SPACE=" - " run
 
 clean: 
 	@echo "$(SPACE)Cleaning commons"

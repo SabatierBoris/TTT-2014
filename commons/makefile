@@ -1,40 +1,71 @@
 TARGET_NAME=commons.jar
 SPACE=""
 
+JUNITJAR=/usr/share/java/junit.jar
+
 CC=nxjc
 JAR=jar
 
-SRC_DIR=src
-TARGET_DIR=target
+BASE_SRC_DIR=src
+MAIN_SRC_DIR=$(BASE_SRC_DIR)/main/java
+TEST_SRC_DIR=$(BASE_SRC_DIR)/test/java
 
-SRC=$(shell find $(SRC_DIR)/ -type f -name '*.java')
-CLASS=$(patsubst $(SRC_DIR)/%.java, $(TARGET_DIR)/%.class, $(SRC))
+BASE_TARGET_DIR=target
+MAIN_TARGET_DIR=$(BASE_TARGET_DIR)/main/java
+TEST_TARGET_DIR=$(BASE_TARGET_DIR)/test/java
 
-CFLAGS=-d $(TARGET_DIR)
+MAIN_SRC=$(shell find $(MAIN_SRC_DIR)/ -type f -name '*.java')
+MAIN_CLASS=$(patsubst $(MAIN_SRC_DIR)/%.java, $(MAIN_TARGET_DIR)/%.class, $(MAIN_SRC))
+
+TEST_SRC=$(shell find $(TEST_SRC_DIR)/ -type f -name '*.java')
+TEST_CLASS=$(patsubst $(TEST_SRC_DIR)/%.java, $(TEST_TARGET_DIR)/%.class, $(TEST_SRC))
+
+MAIN_CFLAGS=-d $(MAIN_TARGET_DIR)
+TEST_CFLAGS=-d $(TEST_TARGET_DIR) -cp $(JUNITJAR):$(MAIN_TARGET_DIR)
 JARFLAGS=-cf
+TESTFLAGS=-cp $(JUNITJAR):$(TEST_TARGET_DIR):$(MAIN_TARGET_DIR)
 
-TARGET=$(TARGET_DIR)/$(TARGET_NAME)
+TARGET=$(MAIN_TARGET_DIR)/$(TARGET_NAME)
 
-all: $(TARGET)
+all: $(MAIN_TARGET_DIR) $(TARGET)
 
-$(TARGET): $(TARGET_DIR) $(CLASS)
+get_target:
+	@echo "$(TARGET)"
+
+test: all $(TEST_TARGET_DIR) runtest
+
+runtest: $(TEST_CLASS) 
+	@echo "$(SPACE)Starting the test"
+	@java $(TESTFLAGS) org.junit.runner.JUnitCore $(subst /,.,$(patsubst $(TEST_TARGET_DIR)/%.class, %, $^))
+
+$(TARGET): $(MAIN_CLASS)
 
 %.jar:
-	@echo "$(SPACE)Building `basename $@`"
+	@echo "$(SPACE)Building $(shell basename $@)"
 	@$(JAR) -cf $@ $^
 
-$(TARGET_DIR)/%.class: $(SRC_DIR)/%.java
-	@echo "$(SPACE)Compiling `basename $^`" 
-	@$(CC) $(CFLAGS) $^
+$(MAIN_TARGET_DIR)/%.class: $(MAIN_SRC_DIR)/%.java
+	@echo "$(SPACE)compiling $(shell basename $^)" 
+	@$(CC) $(MAIN_CFLAGS) $^
 
-$(TARGET_DIR):
+$(TEST_TARGET_DIR)/%.class: $(TEST_SRC_DIR)/%.java
+	@echo "$(SPACE)compiling $(shell basename $^)" 
+	@$(CC) $(TEST_CFLAGS) $^
+
+$(MAIN_TARGET_DIR):
 	@echo "$(SPACE)Creating $@ directory" 
-	@mkdir $(TARGET_DIR)
+	@mkdir -p $@
+
+$(TEST_TARGET_DIR):
+	@echo "$(SPACE)Creating $@ directory" 
+	@mkdir -p $@
 
 clean:
 	@echo "$(SPACE)Removing class files" 
-	@rm -f $(CLASS)
-	@echo "$(SPACE)Removing `basename $(TARGET)`" 
+	@rm -f $(MAIN_CLASS)
+	@echo "$(SPACE)Removing $(shell basename $(TARGET))" 
 	@rm -f $(TARGET)
-	@echo "$(SPACE)Removing $(TARGET_DIR) directory" 
-	@rm -rf $(TARGET_DIR)
+	@echo "$(SPACE)Removing $(BASE_TARGET_DIR) directory" 
+	@rm -rf $(BASE_TARGET_DIR)
+
+.PHONY: runtest clean get_target
