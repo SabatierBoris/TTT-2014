@@ -34,7 +34,11 @@ TESTFLAGS=-cp $(JUNITJAR):$(TEST_TARGET_DIR):$(MAIN_TARGET_DIR)
 
 TARGET=$(MAIN_TARGET_DIR)/$(TARGET_NAME)
 
-all: $(MAIN_TARGET_DIR) $(TARGET)
+all: $(COMMONS_TARGET) $(MAIN_TARGET_DIR) $(TARGET)
+
+$(COMMONS_TARGET):
+	@echo "$(SPACE)Building $(shell basename $(COMMONS_TARGET))"
+	@$(MAKE) -s -C $(COMMONS_DIR) SPACE=" - "
 
 run: all
 	@$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
@@ -78,4 +82,4 @@ clean:
 	@echo "$(SPACE)Removing $(BASE_TARGET_DIR) directory" 
 	@rm -rf $(BASE_TARGET_DIR)
 
-.PHONY: clean get_target run
+.PHONY: clean get_target run $(COMMONS_TARGET)
