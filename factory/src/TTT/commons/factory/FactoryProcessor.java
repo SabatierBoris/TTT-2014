@@ -36,7 +36,7 @@ public class FactoryProcessor extends AbstractProcessor {
 			if(!elements.isEmpty()){
 				Hashtable<String,ArrayList<Element>> map = new Hashtable<String,ArrayList<Element>>();
 				for(Element element : elements){
-					messager.printMessage(Kind.NOTE,element.getSimpleName());
+					//messager.printMessage(Kind.NOTE,element.getSimpleName());
 					ItemFactory i = element.getAnnotation(ItemFactory.class);
 					if(i != null){
 						String val = i.factoryName();
@@ -63,8 +63,8 @@ public class FactoryProcessor extends AbstractProcessor {
 								className = buff;
 							}
 						}
-						messager.printMessage(Kind.NOTE," package : " + packageName);
-						messager.printMessage(Kind.NOTE," class : " + className);
+						//messager.printMessage(Kind.NOTE," package : " + packageName);
+						//messager.printMessage(Kind.NOTE," class : " + className);
 
 						PrintWriter factopw = new PrintWriter(filer.createResource(StandardLocation.SOURCE_OUTPUT, "" , packageName.replace(".","/") + "/" + className + "Factory.java").openOutputStream());
 

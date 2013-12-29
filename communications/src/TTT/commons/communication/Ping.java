@@ -3,20 +3,20 @@ package TTT.commons.communication;
 import TTT.commons.factory.ItemFactory;
 
 @ItemFactory(factoryName="TTT.commons.communication.Messages")
-public class Error extends Message {
-	public static final int ID = 1;
+public class Ping extends Message {
+	public static final int ID = 2;
 	private String msg;
 
-	public Error(){
+	public Ping(){
 	}
 
-	public Error(String data){
+	public Ping(String data){
 		this.msg = data;
 	}
 
 	@Override
 	public String toString(){
-		return "Error : " + msg;
+		return "Ping : " + msg;
 	}
 
 	@Override
@@ -24,3 +24,4 @@ public class Error extends Message {
 		msg = data;
 	}
 }
+

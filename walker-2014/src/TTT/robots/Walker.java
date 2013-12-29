@@ -2,19 +2,20 @@ package TTT.robots;
 
 import lejos.nxt.Button;
 
-import TTT.robots.communication.Connexion;
+import TTT.libNXT.communication.Connexion;
+
+import TTT.commons.communication.Ping;
 
 public class Walker {
 	public static void main(String[] args){
-		System.out.println("Waiting");
 		Connexion conn = Connexion.getInstance();
-		System.out.println("Connected");
+		conn.connect();
 		Button.waitForAnyPress();
 		System.out.println("Send M1");
-		conn.send("1:96AA");
+		conn.send(new Ping("ping"));
 		Button.waitForAnyPress();
 		System.out.println("Send M2");
-		conn.send("2:Message 2");
+		conn.send(new Ping("pong"));
 		Button.waitForAnyPress();
 
 	}

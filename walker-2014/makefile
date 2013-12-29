@@ -16,23 +16,22 @@ TARGET_DIR=target
 
 MAIN_CLASS=TTT/robots/Walker
 
-COMMONS_DIR=../commons
-COMMONS_TARGET=$(COMMONS_DIR)/$(shell $(MAKE) -s -C $(COMMONS_DIR) get_target)
-COMMONS_TARGET_DIR=$(shell dirname $(COMMONS_TARGET))
+LIBNXT_DIR=../libNXT
+LIBNXT_TARGET=$(LIBNXT_DIR)/$(shell $(MAKE) -s -C $(LIBNXT_DIR) get_target)
 
 SRC=$(shell find $(SRC_DIR)/ -type f -name '*.java')
 CLASS=$(patsubst $(SRC_DIR)/%.java, $(TARGET_DIR)/%.class, $(SRC))
 
-CFLAGS=-d $(TARGET_DIR) -cp $(TARGET_DIR):$(COMMONS_TARGET_DIR)
-LINKFLAGS=-cp $(TARGET_DIR):$(COMMONS_TARGET_DIR)
+CFLAGS=-d $(TARGET_DIR) -cp $(SRC_DIR):$(LIBNXT_TARGET)
+LINKFLAGS=-cp $(TARGET_DIR):$(LIBNXT_TARGET)
 
-TARGET=$(TARGET_DIR)/$(TARGET_NAME)
+TARGET=$(TARGET_NAME)
 
-all: $(COMMONS_TARGET) $(TARGET_DIR) $(TARGET)
+all: $(LIBNXT_TARGET) $(TARGET_DIR) $(TARGET)
 
-$(COMMONS_TARGET):
-	@echo "$(SPACE)Building $(shell basename $(COMMONS_TARGET))"
-	@$(MAKE) -s -C $(COMMONS_DIR) SPACE=" - "
+$(LIBNXT_TARGET):
+	@echo "$(SPACE)Building $(shell basename $@)"
+	@$(MAKE) -s -C $(LIBNXT_DIR) SPACE="$(SPACE) - "
 
 run: all
 	@$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
@@ -62,4 +61,4 @@ clean:
 	@echo "$(SPACE)Removing $(BASE_TARGET_DIR) directory" 
 	@rm -rf $(BASE_TARGET_DIR)
 
-.PHONY: clean get_target run $(COMMONS_TARGET)
+.PHONY: clean get_target run $(LIBNXT_TARGET)

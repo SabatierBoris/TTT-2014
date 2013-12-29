@@ -4,7 +4,7 @@ import TTT.commons.factory.ItemFactory;
 
 @ItemFactory(factoryName="TTT.commons.communication.Messages")
 public class Battery extends Message {
-	public static final int ID = 1;
+	public static final int ID = 3;
 	private int value;
 
 	@Override

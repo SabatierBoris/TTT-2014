@@ -14,7 +14,7 @@ CLASS=$(patsubst $(SRC_DIR)/%.java, $(TARGET_DIR)/%.class, $(SRC))
 CFLAGS=-d $(TARGET_DIR) -cp $(SRC_DIR) -Xlint
 JARFLAGS=-cf
 
-TARGET=$(TARGET_DIR)/$(TARGET_NAME)
+TARGET=$(TARGET_NAME)
 
 all: $(TARGET_DIR) $(TARGET)
 
