@@ -19,11 +19,17 @@ MAIN_CLASS=TTT/robots/Wheeler
 LIBNXT_DIR=../libNXT
 LIBNXT_TARGET=$(LIBNXT_DIR)/$(shell $(MAKE) -s -C $(LIBNXT_DIR) get_target)
 
+COMMUNICATION_DIR=../communications/
+COMMUNICATION_TARGET=$(COMMUNICATION_DIR)$(shell $(MAKE) -s -C $(COMMUNICATION_DIR) get_target)
+
+FACTORY_DIR=../factory/
+FACTORY_TARGET=$(FACTORY_DIR)$(shell $(MAKE) -s -C $(FACTORY_DIR) get_target)
+
 SRC=$(shell find $(SRC_DIR)/ -type f -name '*.java')
 CLASS=$(patsubst $(SRC_DIR)/%.java, $(TARGET_DIR)/%.class, $(SRC))
 
 CFLAGS=-d $(TARGET_DIR) -cp $(SRC_DIR):$(LIBNXT_TARGET)
-LINKFLAGS=-cp $(TARGET_DIR):$(LIBNXT_TARGET)
+LINKFLAGS= -v -cp $(TARGET_DIR):$(LIBNXT_TARGET):$(COMMUNICATION_TARGET):$(FACTORY_TARGET)
 
 TARGET=$(TARGET_NAME)
 

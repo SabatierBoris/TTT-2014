@@ -6,22 +6,38 @@ import lejos.nxt.comm.NXTConnection;
 import TTT.commons.communication.Communicator;
 import TTT.commons.communication.Message;
 
-public class Connexion{
+public class Connexion extends Thread{
 	private static Connexion instance = new Connexion();
 
 	private Communicator comm;
 	private NXTConnection connection;
 
 	private Connexion(){
+		super();
 		this.comm = Communicator.getInstance();
 		this.connection = null;
+	}
+
+	@Override
+	public void run(){
+		while(!this.isInterrupted()){
+			try{
+				if(this.isConnected()){
+					//System.out.println(this.read());
+				} else if(!this.connect()){
+					Thread.sleep(100);
+				}
+			} catch(InterruptedException e){
+				this.interrupt();
+			}
+		}
 	}
 
 	public boolean isConnected(){
 		return (this.comm.isConnected() && this.connection != null);
 	}
 
-	public boolean connect(){
+	public synchronized boolean connect(){
 		System.out.println("Wait");
 		this.connection = USB.waitForConnection();
 		if(!this.comm.connect(this.connection.openInputStream(),this.connection.openOutputStream())){
@@ -44,7 +60,7 @@ public class Connexion{
 		return instance;
 	}
 
-	public String read(){
+	public synchronized String read(){
 		Message in = this.comm.readMessage();
 		if(in != null){
 			return in.toString();
@@ -53,8 +69,14 @@ public class Connexion{
 		}
 	}
 
-	public void send(Message m){
-		this.comm.sendMessage(m);
+	public synchronized void send(Message m){
+		if(this.isConnected()){
+			if(!this.comm.sendMessage(m)){
+				this.close();
+			} else {
+				System.out.println(m.toString());
+			}
+		}
 	}
 }
 

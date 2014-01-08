@@ -16,7 +16,7 @@ public class Ping extends Message {
 
 	@Override
 	public String toString(){
-		return "Ping : " + msg;
+		return ID + ":" + msg;
 	}
 
 	@Override

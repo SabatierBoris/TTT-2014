@@ -9,7 +9,7 @@ public class Battery extends Message {
 
 	@Override
 	public String toString(){
-		return "Battery : " + value;
+		return ID + ":" + value;
 	}
 
 	@Override

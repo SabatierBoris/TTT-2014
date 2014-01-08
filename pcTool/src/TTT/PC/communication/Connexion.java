@@ -8,39 +8,64 @@ import java.io.IOException;
 import lejos.pc.comm.NXTCommFactory;
 import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTComm;
+import lejos.pc.comm.NXTInfo;
 
 import TTT.commons.communication.Communicator;
 import TTT.commons.communication.Message;
 
-public class Connexion{
+public class Connexion extends Thread{
 	private static Connexion instance = new Connexion();
 
 	private Communicator comm;
 	private NXTComm connection;
 
 	private Connexion(){
+		super();
 		this.comm = Communicator.getInstance();
 		this.connection = null;
+	}
+
+	@Override
+	public void run(){
+		String m;//TODO Change to Message
+		while(!this.isInterrupted()){
+			try{
+				if(this.isConnected()){
+					m = this.read();
+					System.out.println(m.toString());
+				} else if(!this.connect()){
+					Thread.sleep(100);
+				}
+			} catch(InterruptedException e){
+				this.interrupt();
+			}
+		}
 	}
 
 	public boolean isConnected(){
 		return (this.comm.isConnected() && this.connection != null);
 	}
 
-	public boolean connect(){
+	public synchronized boolean connect(){
+		NXTInfo[] infos;
 		try{
-			System.out.println("Wait");
 			this.connection = NXTCommFactory.createNXTComm(NXTCommFactory.USB);
-			this.connection.open(this.connection.search("NXT")[0]);
-			System.out.println("Connect");
-			this.comm.connect(this.connection.getInputStream(),this.connection.getOutputStream());
+			infos = this.connection.search("NXT");
+			if(infos.length>=1){
+				this.connection.open(infos[0]);
+				this.comm.connect(this.connection.getInputStream(),this.connection.getOutputStream());
+			} else {
+				this.close();
+				return false;
+			}
 		} catch(NXTCommException e){
 			this.close();
+			return false;
 		}
 		return true;
 	}
 
-	public void close(){
+	public synchronized void close(){
 		this.comm.close();
 		if(this.connection != null){
 			try{

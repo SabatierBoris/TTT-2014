@@ -58,12 +58,16 @@ public class Communicator {
 		}
 	}
 
-	synchronized public void sendMessage(Message msg){
+	synchronized public boolean sendMessage(Message msg){
 		try{
 			this.dataOut.write(msg.toString());
+			this.dataOut.newLine();
+			this.dataOut.flush();
 		} catch(IOException e){
 			this.close();
+			return false;
 		}
+		return true;
 	}
 
 	synchronized public Message readMessage(){

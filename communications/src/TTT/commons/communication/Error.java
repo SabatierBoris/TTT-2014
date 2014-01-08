@@ -16,7 +16,7 @@ public class Error extends Message {
 
 	@Override
 	public String toString(){
-		return "Error : " + msg;
+		return ID + ":" + msg;
 	}
 
 	@Override
