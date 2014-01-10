@@ -7,6 +7,7 @@ import lejos.nxt.NXTRegulatedMotor;
 
 import TTT.robots.actions.Arm;
 
+import TTT.libNXT.communication.Connexion;
 
 public class Wheeler {
 	public static void main(String[] args){
@@ -17,10 +18,19 @@ public class Wheeler {
 		Button.waitForAnyPress();
 		*/
 
-		TaskTest t = new TaskTest();
-		t.setDaemon(true);
-		t.start();
+		Connexion conn = Connexion.getInstance();
+		conn.setDaemon(true);
+		conn.start();
+
+//		TaskTest t = new TaskTest();
+		PingResponse p = new PingResponse();
+		p.setDaemon(true);
+		p.start();
+//		t.setDaemon(true);
+//		t.start();
 		Button.waitForAnyPress();
-		t.interrupt();
+		p.interrupt();
+//		t.interrupt();
+		conn.interrupt();
 	}
 }

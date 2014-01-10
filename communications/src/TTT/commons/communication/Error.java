@@ -23,4 +23,9 @@ public class Error extends Message {
 	public void parse(String data) throws ParsingFailException {
 		msg = data;
 	}
+
+	@Override
+	public int getId(){
+		return Error.ID;
+	}
 }

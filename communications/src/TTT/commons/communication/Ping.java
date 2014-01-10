@@ -23,5 +23,9 @@ public class Ping extends Message {
 	public void parse(String data) throws ParsingFailException {
 		msg = data;
 	}
-}
 
+	@Override
+	public int getId(){
+		return Ping.ID;
+	}
+}

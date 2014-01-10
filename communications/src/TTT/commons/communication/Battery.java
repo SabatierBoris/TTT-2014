@@ -20,4 +20,9 @@ public class Battery extends Message {
 			throw new ParsingFailException("Wrong data format : " + data);
 		}
 	}
+
+	@Override
+	public int getId(){
+		return Battery.ID;
+	}
 }

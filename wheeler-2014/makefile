@@ -42,7 +42,7 @@ $(LIBNXT_TARGET):
 run: all
 	@$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
 
-$(TARGET): $(CLASS)
+$(TARGET): $(CLASS) $(LIBNXT_TARGET)
 
 %.nxj:
 	@echo "$(SPACE)Building $(shell basename $@)"

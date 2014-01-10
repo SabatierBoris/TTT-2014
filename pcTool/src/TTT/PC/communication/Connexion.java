@@ -88,6 +88,16 @@ public class Connexion extends Thread{
 			return "";
 		}
 	}
+
+	public synchronized void send(Message m){
+		if(this.isConnected()){
+			if(!this.comm.sendMessage(m)){
+				this.close();
+			} else {
+				System.out.println(m.toString());
+			}
+		}
+	}
 }
 
 

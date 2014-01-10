@@ -58,7 +58,7 @@ public class Communicator {
 		}
 	}
 
-	synchronized public boolean sendMessage(Message msg){
+	public boolean sendMessage(Message msg){
 		try{
 			this.dataOut.write(msg.toString());
 			this.dataOut.newLine();
@@ -70,7 +70,7 @@ public class Communicator {
 		return true;
 	}
 
-	synchronized public Message readMessage(){
+	public Message readMessage(){
 		Message msg = null;
 		String in = null;
 		try{
@@ -78,6 +78,9 @@ public class Communicator {
 		} catch(IOException e){
 			in = null;
 		} catch(NullPointerException e){
+			this.close();
+			return null;
+		} catch(OutOfMemoryError e){
 			this.close();
 			return null;
 		}

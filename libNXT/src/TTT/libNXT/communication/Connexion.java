@@ -1,5 +1,9 @@
 package TTT.libNXT.communication;
 
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Hashtable;
+
 import lejos.nxt.comm.USB;
 import lejos.nxt.comm.NXTConnection;
 
@@ -8,6 +12,8 @@ import TTT.commons.communication.Message;
 
 public class Connexion extends Thread{
 	private static Connexion instance = new Connexion();
+
+	private final Hashtable<Integer,Collection<MessageListener>> messageListeners = new Hashtable<Integer,Collection<MessageListener>>();
 
 	private Communicator comm;
 	private NXTConnection connection;
@@ -18,12 +24,32 @@ public class Connexion extends Thread{
 		this.connection = null;
 	}
 
+	private void fireMessageReceived(Message m){
+		for(MessageListener listener : this.messageListeners.get(m.getId())){
+			listener.messageReceived(m);
+		}
+	}
+
+	public void addMessageListener(MessageListener listener, Integer t){
+		Collection<MessageListener> tmp = this.messageListeners.get(t);
+		if(tmp == null){
+			tmp = new ArrayList<MessageListener>();
+		}
+		tmp.add(listener);
+		this.messageListeners.put(t,tmp);
+	}
+
 	@Override
 	public void run(){
+		Message m;
 		while(!this.isInterrupted()){
 			try{
 				if(this.isConnected()){
-					//System.out.println(this.read());
+					m = this.read();
+					if(m != null){
+						System.out.println(m.toString());
+						this.fireMessageReceived(m);
+					}
 				} else if(!this.connect()){
 					Thread.sleep(100);
 				}
@@ -38,14 +64,19 @@ public class Connexion extends Thread{
 	}
 
 	public synchronized boolean connect(){
-		System.out.println("Wait");
-		this.connection = USB.waitForConnection();
-		if(!this.comm.connect(this.connection.openInputStream(),this.connection.openOutputStream())){
+		try{
+			System.out.println("Wait");
+			this.connection = USB.waitForConnection();
+			if(!this.comm.connect(this.connection.openInputStream(),this.connection.openOutputStream())){
+				this.close();
+				return false;
+			}
+			System.out.println("Connect");
+			return true;
+		} catch(NullPointerException e){
 			this.close();
 			return false;
 		}
-		System.out.println("Connect");
-		return true;
 	}
 
 	public void close(){
@@ -60,16 +91,12 @@ public class Connexion extends Thread{
 		return instance;
 	}
 
-	public synchronized String read(){
+	public Message read(){
 		Message in = this.comm.readMessage();
-		if(in != null){
-			return in.toString();
-		} else {
-			return "";
-		}
+		return in;
 	}
 
-	public synchronized void send(Message m){
+	public void send(Message m){
 		if(this.isConnected()){
 			if(!this.comm.sendMessage(m)){
 				this.close();
