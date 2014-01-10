@@ -8,6 +8,7 @@ import lejos.nxt.NXTRegulatedMotor;
 import TTT.robots.actions.Arm;
 
 import TTT.libNXT.communication.Connexion;
+import TTT.libNXT.task.PingResponse;
 
 public class Wheeler {
 	public static void main(String[] args){

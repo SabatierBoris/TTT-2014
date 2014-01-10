@@ -9,11 +9,10 @@ public class Monitor{
 		Connexion conn = Connexion.getInstance();
 		conn.setDaemon(true);
 		conn.start();
-		Ping p = new Ping("Pong");
 		while(true){
 			try{
-				conn.send(p);
-				Thread.sleep(50);
+				conn.send(new Ping());
+				Thread.sleep(500);
 			}catch(InterruptedException e){
 				conn.interrupt();
 			}

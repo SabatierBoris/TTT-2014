@@ -1,4 +1,4 @@
-package TTT.robots;
+package TTT.libNXT.task;
 
 import java.util.Queue;
 
@@ -21,17 +21,31 @@ public class PingResponse extends Thread implements MessageListener{
 
 	@Override
 	public void run(){
-		Ping p = new Ping("Toto");
-		while(!this.isInterrupted()){
-			if(!this.queue.empty()){
-				this.queue.pop();
-				this.conn.send(p);
+		Ping p = null;
+		synchronized(this.queue){
+			try{
+				while(!this.isInterrupted()){
+					if(!this.queue.empty()){
+						p = (Ping)this.queue.pop();
+						if(p.isRecieved()){
+							p.setSendBack();
+							this.conn.send(p);
+						}
+					}
+					this.queue.wait();
+				}
+			} catch(InterruptedException e){
+				this.interrupt();
 			}
 		}
 	}
 
 	@Override
 	public void messageReceived(Message m){
-		this.queue.push((Ping) m);
+		synchronized(this.queue){
+			this.queue.push((Ping) m);
+			this.queue.notify();
+		}
 	}
 }
+
