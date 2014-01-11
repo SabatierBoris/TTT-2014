@@ -16,8 +16,8 @@ public class Wheeler extends Robot {
 	public Wheeler(){
 		super();
 		this.addTask(Connexion.getInstance());
-		this.addTask(new PingResponse());
-	//	this.addTask(new TaskTest());
+	//	this.addTask(new PingResponse());
+		this.addTask(new TaskTest());
 	}
 
 
