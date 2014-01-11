@@ -28,6 +28,7 @@ public class PingResponse extends Thread implements MessageListener{
 					if(!this.queue.empty()){
 						p = (Ping)this.queue.pop();
 						if(p.isRecieved()){
+							Thread.yield();
 							p.setSendBack();
 							this.conn.send(p);
 						}

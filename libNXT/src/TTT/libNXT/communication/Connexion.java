@@ -47,7 +47,7 @@ public class Connexion extends Thread{
 				if(this.isConnected()){
 					m = this.read();
 					if(m != null){
-						System.out.println(m.toString());
+						//System.out.println(m.toString());
 						this.fireMessageReceived(m);
 					}
 				} else if(!this.connect()){
@@ -96,12 +96,12 @@ public class Connexion extends Thread{
 		return in;
 	}
 
-	public void send(Message m){
+	public synchronized void send(Message m){
 		if(this.isConnected()){
 			if(!this.comm.sendMessage(m)){
 				this.close();
 			} else {
-				System.out.println(m.toString());
+				//System.out.println(m.toString());
 			}
 		}
 	}
