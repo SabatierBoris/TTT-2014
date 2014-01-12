@@ -2,6 +2,7 @@ package TTT.libNXT.sensor;
 
 import lejos.nxt.I2CPort;
 import lejos.nxt.I2CSensor;
+
 import lejos.util.EndianTools;
 
 import lejos.robotics.Tachometer;

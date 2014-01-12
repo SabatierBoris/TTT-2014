@@ -1,23 +1,31 @@
 package TTT.robots;
 
+import lejos.nxt.SensorPort;
 import lejos.nxt.Button;
-
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTRegulatedMotor;
+
+import TTT.libNXT.sensor.MindSensorAngle;
 
 import TTT.robots.actions.Arm;
 
 import TTT.libNXT.communication.Connexion;
 import TTT.libNXT.task.PingResponse;
 import TTT.libNXT.robot.Robot;
+import TTT.libNXT.navigation.BasicOdometry;
 
 public class Wheeler extends Robot {
 
+	private BasicOdometry odo;
+
 	public Wheeler(){
 		super();
+		this.odo = new BasicOdometry(new MindSensorAngle(SensorPort.S1), 1, 22,
+									 new MindSensorAngle(SensorPort.S2), -1, 22, 4);
 		this.addTask(Connexion.getInstance());
+		this.addTask(this.odo);
 	//	this.addTask(new PingResponse());
-		this.addTask(new TaskTest());
+		this.addTask(new TaskTest(this.odo));
 	}
 
 
