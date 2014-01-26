@@ -25,8 +25,10 @@ public class Connexion extends Thread{
 	}
 
 	private void fireMessageReceived(Message m){
-		for(MessageListener listener : this.messageListeners.get(m.getId())){
-			listener.messageReceived(m);
+		if(this.messageListeners != null && this.messageListeners.get(m.getId()) != null){
+			for(MessageListener listener : this.messageListeners.get(m.getId())){
+				listener.messageReceived(m);
+			}
 		}
 	}
 

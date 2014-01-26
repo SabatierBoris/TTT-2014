@@ -11,7 +11,7 @@ public class Monitor{
 		conn.start();
 		while(true){
 			try{
-				conn.send(new Ping());
+			//	conn.send(new Ping());
 				Thread.sleep(500);
 			}catch(InterruptedException e){
 				conn.interrupt();

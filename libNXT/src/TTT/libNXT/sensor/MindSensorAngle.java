@@ -45,7 +45,8 @@ public class MindSensorAngle extends I2CSensor implements Tachometer {
 
 	@Override
 	public int getTachoCount(){
-		return this.getRawAngle();
+//		return this.getRawAngle();
+		return this.getAngle();
 	}
 
 	@Override

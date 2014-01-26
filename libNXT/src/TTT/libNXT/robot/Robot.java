@@ -2,13 +2,15 @@ package TTT.libNXT.robot;
 
 import java.util.ArrayList;
 
-import lejos.nxt.Button;
+import lejos.robotics.Touch;
 
 public class Robot {
 	private ArrayList<Thread> tasks;
+	private Touch starter;
 
-	public Robot(){
+	public Robot(Touch starter){
 		this.tasks = new ArrayList<Thread>();
+		this.starter = starter;
 	}
 
 
@@ -17,11 +19,20 @@ public class Robot {
 	}
 
 	public void run(){
+		//while(!this.starter.isPressed()){
+		//	Thread.yield();
+		//}
 		for(Thread t : this.tasks){
 			t.setDaemon(true);
 			t.start();
 		}
-		Button.waitForAnyPress();//TODO replace by the right thing
+		while(this.starter.isPressed()){
+			Thread.yield();
+		}
+		//TODO Start the IA
+		while(!this.starter.isPressed()){
+			Thread.yield();
+		}
 		for(Thread t : this.tasks){
 			t.interrupt();
 		}

@@ -111,7 +111,7 @@ public class Pose {
 	}
 
 	public int getAngleTo(Point p){
-		Point tmp = this.getLocation().substract(p);
+		Point tmp = p.substract(this.getLocation());
 		int x = tmp.getX();
 		int y = tmp.getY();
 		if(x == 0){
