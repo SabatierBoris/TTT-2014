@@ -81,8 +81,8 @@ public class BasicOdometry extends Thread {
 			int delta_distance = this.distance - prevDistance;
 			int delta_orient = (this.orient + prevOrient)/2;
 
-			newPose.move(delta_distance/COEF_D,newPose.getHeading()+Math.round(delta_orient/COEF_H));
-			//newPose.move(delta_d/COEF_D);
+			//newPose.move(delta_distance/COEF_D,newPose.getHeading()+Math.round(delta_orient/COEF_H));
+			newPose.move(delta_distance/COEF_D);
 
 			tmpPose = this.getCurrentPose();
 			// If a new position is set by someone else during the calculation, we ignore the calculation

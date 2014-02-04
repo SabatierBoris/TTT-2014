@@ -5,6 +5,8 @@ import lejos.robotics.RegulatedMotor;
 public abstract class AbstractAsservise extends Thread implements CodeursListener {
 	protected long lastUpdateTick;
 
+	private static final int ratioTick = 5;
+
 	protected int lastDistance;
 	protected int lastOrient;
 
@@ -78,14 +80,16 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		long currentTick = System.currentTimeMillis();
 		int diffDistance = this.currentDistance - this.lastDistance;
 		int diffOrient = this.currentOrient - this.lastOrient;
-		long diffTime = currentTick - this.lastUpdateTick;
+		long diffTime = (currentTick - this.lastUpdateTick)/AbstractAsservise.ratioTick;
 
-		this.currentLinearSpeed = (int)(diffDistance/diffTime);
-		this.currentAngularSpeed = (int)(diffOrient/diffTime);
+		if(diffTime != 0){
+			this.currentLinearSpeed = (int)(diffDistance/diffTime);
+			this.currentAngularSpeed = (int)(diffOrient/diffTime);
 
-		this.lastDistance = this.currentDistance;
-		this.lastOrient = this.currentOrient;
-		this.lastUpdateTick = currentTick;
+			this.lastDistance = this.currentDistance;
+			this.lastOrient = this.currentOrient;
+			this.lastUpdateTick = currentTick;
+		}
 	}
 
 	@Override

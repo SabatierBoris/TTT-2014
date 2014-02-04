@@ -1,15 +1,11 @@
-package TTT.robots;
+package TTT.robots.navigation;
 
 import lejos.robotics.RegulatedMotor;
 
 import TTT.libNXT.navigation.BasicOdometry;
 import TTT.libNXT.navigation.AbstractAsservise;
 
-//TODO Remove
-import TTT.commons.communication.Error;
-import TTT.libNXT.communication.Connexion;
-
-public class DifferentialAsservise extends AbstractAsservise{
+public class TankAsservise extends AbstractAsservise{
 
 	private int lineP;
 	private int angleP;
@@ -29,13 +25,10 @@ public class DifferentialAsservise extends AbstractAsservise{
 	private int previousLinearSpeed;
 	private int previousAngularSpeed;
 
-	//TODO Remove
-	private Connexion conn;
-
-	public DifferentialAsservise(BasicOdometry odo, RegulatedMotor linear, RegulatedMotor rotation, 
+	public TankAsservise(BasicOdometry odo, RegulatedMotor left, RegulatedMotor right, 
 			                     int lineP, int lineI, int lineD,
 								 int angleP, int angleI, int angleD){
-		super(odo,linear,rotation);
+		super(odo,left,right);
 
 		this.lineP = lineP;
 		this.lineI = lineI;
@@ -46,9 +39,6 @@ public class DifferentialAsservise extends AbstractAsservise{
 		this.angleD = angleD;
 
 		this.reset();
-
-		//TODO Remove
-		this.conn = Connexion.getInstance();
 	}
 
 	@Override
@@ -77,8 +67,8 @@ public class DifferentialAsservise extends AbstractAsservise{
 		regulatedAngularError = (int)Math.round((this.angleP * currentAngularError) + (this.angleI * this.sumAngularError) + (this.angleD * changeAngularError));
 		angularSpeed = this.previousAngularSpeed + regulatedAngularError;
 
-		this.setM1Speed(linearSpeed);
-		this.setM2Speed(angularSpeed);
+		this.setM1Speed(linearSpeed+angularSpeed);
+		this.setM2Speed(linearSpeed-angularSpeed);
 		this.previousLinearSpeed = linearSpeed;
 		this.previousAngularSpeed = angularSpeed;
 

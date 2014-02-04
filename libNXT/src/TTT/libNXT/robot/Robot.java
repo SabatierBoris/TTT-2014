@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import lejos.robotics.Touch;
 
 public class Robot {
+	private static final long TIME_LIMIT = 90000l; //TODO fix
 	private ArrayList<Thread> tasks;
 	private Touch starter;
 
@@ -19,9 +20,10 @@ public class Robot {
 	}
 
 	public void run(){
-		//while(!this.starter.isPressed()){
-		//	Thread.yield();
-		//}
+		long currentTick,startedTick;
+		while(!this.starter.isPressed()){
+			Thread.yield();
+		}
 		for(Thread t : this.tasks){
 			t.setDaemon(true);
 			t.start();
@@ -30,7 +32,10 @@ public class Robot {
 			Thread.yield();
 		}
 		//TODO Start the IA
-		while(!this.starter.isPressed()){
+		startedTick = System.currentTimeMillis();
+		currentTick = System.currentTimeMillis();
+		while(!this.starter.isPressed() || currentTick-startedTick > Robot.TIME_LIMIT){
+			currentTick = System.currentTimeMillis();
 			Thread.yield();
 		}
 		for(Thread t : this.tasks){

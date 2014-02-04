@@ -9,7 +9,7 @@ import TTT.commons.navigation.PoseListener;
 import TTT.libNXT.navigation.BasicOdometry;
 import TTT.libNXT.navigation.AbstractAsservise;
 
-public class TaskTest1 extends Thread implements PoseListener {
+public class TaskTest extends Thread implements PoseListener {
 	private AbstractAsservise asserv;
 
 	private int currentLinearSpeed;
@@ -32,7 +32,7 @@ public class TaskTest1 extends Thread implements PoseListener {
 	//TODO Remove
 	private Connexion conn;
 
-	public TaskTest1(BasicOdometry odo, AbstractAsservise asserv){
+	public TaskTest(BasicOdometry odo, AbstractAsservise asserv){
 		super();
 		this.currentLinearSpeed = 0;
 		this.currentAngularSpeed = 0;

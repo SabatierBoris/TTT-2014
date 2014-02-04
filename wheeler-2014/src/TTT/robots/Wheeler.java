@@ -40,8 +40,8 @@ public class Wheeler extends Robot {
 		this.addTask(asserv);
 		//this.addTask(nav);
 		//this.addTask(new TaskTest(nav));
-		this.addTask(new TaskTest1(asserv));
-		//this.addTask(new SendPose(this.odo));
+		this.addTask(new TaskTest1(this.odo,asserv));
+//		this.addTask(new SendPose(this.odo));
 	}
 
 
