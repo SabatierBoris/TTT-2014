@@ -124,11 +124,23 @@ public class TaskTest extends Thread implements PoseListener {
 
 
 			Thread.sleep(2000);
-			this.currentLinearSpeed = 0;
-			this.currentAngularSpeed = 30;
+			this.currentLinearSpeed = -10;
+			this.currentAngularSpeed = 0;
 			this.applySpeed();
 
-			Thread.sleep(5000);
+			Thread.sleep(3000);
+			this.currentLinearSpeed = 0;
+			this.currentAngularSpeed = 0;
+			this.applySpeed();
+			Thread.sleep(200);
+			this.currentLinearSpeed = 0;
+			this.currentAngularSpeed = 0;
+			this.applySpeed();
+			Thread.sleep(200);
+			this.currentLinearSpeed = 0;
+			this.currentAngularSpeed = 0;
+			this.applySpeed();
+			Thread.sleep(200);
 			this.currentLinearSpeed = 0;
 			this.currentAngularSpeed = 0;
 			this.applySpeed();

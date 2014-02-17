@@ -1,5 +1,9 @@
 package TTT.libNXT.navigation;
 
+//TODO Remove
+import TTT.commons.communication.Error;
+import TTT.libNXT.communication.Connexion;
+
 import lejos.robotics.RegulatedMotor;
 
 public abstract class AbstractAsservise extends Thread implements CodeursListener {
@@ -25,8 +29,37 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 	private int m1Speed;
 	private int m2Speed;
 
-	public AbstractAsservise(BasicOdometry odo, RegulatedMotor m1, RegulatedMotor m2){
+	private int lineP;
+	private int angleP;
+
+	private int lineI;
+	private int angleI;
+	
+	private int lineD;
+	private int angleD;
+
+	private int previousLinearError;
+	private int previousAngularError;
+
+	private int sumLinearError;
+	private int sumAngularError;
+
+	private int previousLinearSpeed;
+	private int previousAngularSpeed;
+
+	//TODO Remove
+	private Connexion conn;
+
+	public AbstractAsservise(BasicOdometry odo, RegulatedMotor m1, RegulatedMotor m2, int lineP, int lineI, int lineD, int angleP, int angleI, int angleD){
 		super();
+
+		this.lineP = lineP;
+		this.lineI = lineI;
+		this.lineD = lineD;
+
+		this.angleP = angleP;
+		this.angleI = angleI;
+		this.angleD = angleD;
 
 		this.m1Speed = 0;
 		this.m2Speed = 0;
@@ -47,6 +80,9 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		this.currentAngularSpeed = 0;
 
 		this.lastUpdateTick = System.currentTimeMillis();
+
+		//TODO Remove
+		this.conn = Connexion.getInstance();
 
 		odo.addCodeursListener(this);
 	}
@@ -85,6 +121,10 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		if(diffTime != 0){
 			this.currentLinearSpeed = (int)(diffDistance/diffTime);
 			this.currentAngularSpeed = (int)(diffOrient/diffTime);
+
+			//TODO Remove
+			//this.conn.send(new Error("LS "+this.currentLinearSpeed));
+			//this.conn.send(new Error("AS "+this.currentAngularSpeed));
 
 			this.lastDistance = this.currentDistance;
 			this.lastOrient = this.currentOrient;
@@ -128,6 +168,46 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		}
 	}
 
-	public abstract void speedsCalculation();
-	public abstract void reset();
+	public void speedsCalculation(){
+		int regulatedLinearError = 0;
+		int regulatedAngularError = 0;
+		int linearSpeed = 0;
+		int angularSpeed = 0;
+
+		int currentLinearError = this.targetLinearSpeed - this.currentLinearSpeed;
+		int currentAngularError = this.targetAngularSpeed - this.currentAngularSpeed;
+
+		int changeLinearError = currentLinearError - this.previousLinearError;
+		this.sumLinearError += currentLinearError;
+		regulatedLinearError = Math.round((this.lineP * currentLinearError) + (this.lineI * this.sumLinearError) + (this.lineD * changeLinearError));
+		linearSpeed = this.previousLinearSpeed + regulatedLinearError;
+
+		int changeAngularError = currentAngularError - this.previousAngularError;
+		this.sumAngularError += currentAngularError;
+		regulatedAngularError = Math.round((this.angleP * currentAngularError) + (this.angleI * this.sumAngularError) + (this.angleD * changeAngularError));
+		angularSpeed = this.previousAngularSpeed + regulatedAngularError;
+
+		this.speedsUpdate(linearSpeed,angularSpeed);
+
+		this.previousLinearSpeed = linearSpeed;
+		this.previousAngularSpeed = angularSpeed;
+
+		this.previousLinearError = currentLinearError;
+		this.previousAngularError = currentAngularError;
+	}
+
+	public void reset(){
+		this.previousLinearError = 0;
+		this.previousAngularError = 0;
+		this.sumLinearError = 0;
+		this.sumAngularError = 0;
+		if(this.targetLinearSpeed == 0){
+			this.previousLinearSpeed = 0;
+		}
+		if(this.targetAngularSpeed == 0){
+			this.previousAngularSpeed = 0;
+		}
+	}
+
+	protected abstract void speedsUpdate(int linearSpeed, int angularSpeed);
 }

@@ -1,4 +1,4 @@
-package TTT.robots;
+package TTT.libNXT.task;
 
 import TTT.commons.communication.Error;
 

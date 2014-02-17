@@ -1,5 +1,9 @@
 package TTT.libNXT.navigation;
 
+//TODO Remove
+import TTT.commons.communication.Error;
+import TTT.libNXT.communication.Connexion;
+
 import java.util.ArrayList;
 
 import lejos.robotics.Tachometer;
@@ -28,6 +32,9 @@ public class BasicOdometry extends Thread {
 	private float COEF_D;
 	private float COEF_H;
 
+	//TODO Remove
+	private Connexion conn;
+
 	public BasicOdometry(Tachometer left, int leftRatio,
 			   Tachometer right, int rightRatio, float coef_d, float coef_h){
 		this.leftSensor = left;
@@ -43,6 +50,9 @@ public class BasicOdometry extends Thread {
 
 		this.codeursListeners = new ArrayList<CodeursListener>();
 		this.poseListeners = new ArrayList<PoseListener>();
+
+		//TODO Remove
+		this.conn = Connexion.getInstance();
 
 		this.initTachos();
 	}
@@ -70,6 +80,9 @@ public class BasicOdometry extends Thread {
 		int prevDistance = this.distance;
 		int prevOrient = this.orient;
 
+		//TODO Remove
+		this.conn.send(new Error("LEFT "+currentLeftCount + " RIGHT " + currentRightCount));
+
 		this.distance = (currentLeftCount + currentRightCount)/2;
 		this.orient = (currentLeftCount - currentRightCount);
 		this.fireCodeursChanged(this.distance,this.orient);
@@ -81,7 +94,7 @@ public class BasicOdometry extends Thread {
 			int delta_distance = this.distance - prevDistance;
 			int delta_orient = (this.orient + prevOrient)/2;
 
-			//newPose.move(delta_distance/COEF_D,newPose.getHeading()+Math.round(delta_orient/COEF_H));
+			//TODO newPose.move(delta_distance/COEF_D,newPose.getHeading()+Math.round(delta_orient/COEF_H));
 			newPose.move(delta_distance/COEF_D);
 
 			tmpPose = this.getCurrentPose();
