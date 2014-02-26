@@ -27,8 +27,8 @@ $(COMMUNICATION_TARGET):
 	@$(MAKE) -s -C $(COMMUNICATION_DIR) SPACE="$(SPACE) - "
 
 run: all
-	$(RUN) -cp $(TARGET):$(COMMUNICATION_TARGET) TTT.PC.Monitor
-	#@$(RUN) -jar $(TARGET) TTT.PC.Monitor
+	#@$(RUN) -cp $(TARGET):$(COMMUNICATION_TARGET) TTT.PC.Monitor
+	@$(RUN) -cp $(TARGET):$(COMMUNICATION_TARGET) TTT.PC.Main
 
 get_target:
 	@echo "$(TARGET)"

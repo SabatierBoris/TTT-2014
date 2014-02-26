@@ -11,21 +11,23 @@ import TTT.libNXT.robot.Robot;
 import TTT.libNXT.navigation.BasicOdometry;
 import TTT.libNXT.sensor.HitechnicSensorAngle;
 import TTT.libNXT.task.SendPose;
+import TTT.libNXT.configuration.Configurateur;
 
 import TTT.libNXT.navigation.TankAsservise;
 
 public class Walker extends Robot {
 
 	private BasicOdometry odo;
+	private Configurateur conf;
 
 	public Walker(){
 		super(new TouchSensor(SensorPort.S3));
-		this.odo = new BasicOdometry(new HitechnicSensorAngle(SensorPort.S1), 1,
-									 new HitechnicSensorAngle(SensorPort.S2), -1, 1f, 1f);
-
-		TankAsservise asserv = new TankAsservise(this.odo, MirrorMotor.invertMotor(Motor.A), Motor.B,
-																 1,0,0,1,0,0);
+		this.conf = Configurateur.getInstance();
+		this.conf.setName("Walker");
+		this.odo = new BasicOdometry(new HitechnicSensorAngle(SensorPort.S1), new HitechnicSensorAngle(SensorPort.S2));
+		TankAsservise asserv = new TankAsservise(this.odo, MirrorMotor.invertMotor(Motor.A), Motor.B);
 		//Navigator nav = new Navigator(this.odo,asserv);
+		this.addTask(Configurateur.getInstance());
 		this.addTask(Connexion.getInstance());
 		this.addTask(this.odo);
 		this.addTask(asserv);
@@ -35,9 +37,9 @@ public class Walker extends Robot {
 		//this.addTask(new SendPose(this.odo));
 	}
 
-
 	public static void main(String[] args){
 		Walker bot = new Walker();
 		bot.run();
+		Configurateur.getInstance().save();//TODO improve
 	}
 }

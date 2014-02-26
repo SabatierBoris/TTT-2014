@@ -14,9 +14,9 @@ public class PingResponse extends Thread implements MessageListener{
 
 	public PingResponse(){
 		super();
+		this.queue = new Queue<Ping>();
 		this.conn = Connexion.getInstance();
 		this.conn.addMessageListener(this,Ping.ID);
-		this.queue = new Queue<Ping>();
 	}
 
 	@Override

@@ -4,9 +4,12 @@ package TTT.libNXT.navigation;
 import TTT.commons.communication.Error;
 import TTT.libNXT.communication.Connexion;
 
+import TTT.libNXT.configuration.Configurateur;
+import TTT.libNXT.configuration.ConfigListener;
+
 import lejos.robotics.RegulatedMotor;
 
-public abstract class AbstractAsservise extends Thread implements CodeursListener {
+public abstract class AbstractAsservise extends Thread implements CodeursListener, ConfigListener {
 	protected long lastUpdateTick;
 
 	private static final int ratioTick = 5;
@@ -50,16 +53,17 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 	//TODO Remove
 	private Connexion conn;
 
-	public AbstractAsservise(BasicOdometry odo, RegulatedMotor m1, RegulatedMotor m2, int lineP, int lineI, int lineD, int angleP, int angleI, int angleD){
+	public AbstractAsservise(BasicOdometry odo, RegulatedMotor m1, RegulatedMotor m2){
 		super();
+		Configurateur conf = Configurateur.getInstance();
 
-		this.lineP = lineP;
-		this.lineI = lineI;
-		this.lineD = lineD;
+		this.lineP = Integer.parseInt(conf.get("asserv.lineP","1"));
+		this.lineI = Integer.parseInt(conf.get("asserv.lineI","1"));
+		this.lineD = Integer.parseInt(conf.get("asserv.lineD","1"));
 
-		this.angleP = angleP;
-		this.angleI = angleI;
-		this.angleD = angleD;
+		this.angleP = Integer.parseInt(conf.get("asserv.angleP","1"));
+		this.angleI = Integer.parseInt(conf.get("asserv.angleI","1"));
+		this.angleD = Integer.parseInt(conf.get("asserv.angleD","1"));
 
 		this.m1Speed = 0;
 		this.m2Speed = 0;
@@ -84,7 +88,9 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		//TODO Remove
 		this.conn = Connexion.getInstance();
 
+
 		odo.addCodeursListener(this);
+		conf.addConfigListener(this,"asserv");
 	}
 
 	public void setM1Speed(int s){
@@ -114,17 +120,18 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 
 	public void currentSpeedsCalculation(){
 		long currentTick = System.currentTimeMillis();
-		int diffDistance = this.currentDistance - this.lastDistance;
-		int diffOrient = this.currentOrient - this.lastOrient;
 		long diffTime = (currentTick - this.lastUpdateTick)/AbstractAsservise.ratioTick;
 
 		if(diffTime != 0){
+			int diffDistance = this.currentDistance - this.lastDistance;
+			int diffOrient = this.currentOrient - this.lastOrient;
+
 			this.currentLinearSpeed = (int)(diffDistance/diffTime);
 			this.currentAngularSpeed = (int)(diffOrient/diffTime);
 
 			//TODO Remove
-			//this.conn.send(new Error("LS "+this.currentLinearSpeed));
-			//this.conn.send(new Error("AS "+this.currentAngularSpeed));
+//			this.conn.send(new Error("LS "+this.currentLinearSpeed + " AS " + this.currentAngularSpeed));
+//			this.conn.send(new Error("AS "+this.currentAngularSpeed));
 
 			this.lastDistance = this.currentDistance;
 			this.lastOrient = this.currentOrient;
@@ -206,6 +213,25 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		}
 		if(this.targetAngularSpeed == 0){
 			this.previousAngularSpeed = 0;
+		}
+	}
+
+	@Override
+	public void configChanged(String key, String value){
+		if(key.equals("asserv.lineP")){
+			this.lineP = Integer.parseInt(value);
+		} else if(key.equals("asserv.lineI")){
+			this.lineI = Integer.parseInt(value);
+		} else if(key.equals("asserv.lineD")){
+			this.lineD = Integer.parseInt(value);
+		} else if(key.equals("asserv.angleP")){
+			this.angleP = Integer.parseInt(value);
+		} else if(key.equals("asserv.angleI")){
+			this.angleI = Integer.parseInt(value);
+		} else if(key.equals("asserv.angleD")){
+			this.angleD = Integer.parseInt(value);
+		} else {
+			this.conn.send(new Error("Unknow " + key));
 		}
 	}
 

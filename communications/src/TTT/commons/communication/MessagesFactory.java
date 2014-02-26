@@ -13,11 +13,17 @@ public class MessagesFactory extends AbstractMessagesFactory {
 			case Battery.ID:
 				ret = new Battery();
 				break;
+			case SetConfig.ID:
+				ret = new SetConfig();
+				break;
 			case Ping.ID:
 				ret = new Ping();
 				break;
 			case Error.ID:
 				ret = new Error();
+				break;
+			case GetConfig.ID:
+				ret = new GetConfig();
 				break;
 		}
 		return ret;

@@ -11,7 +11,10 @@ import lejos.robotics.Tachometer;
 import TTT.commons.navigation.Pose;
 import TTT.commons.navigation.PoseListener;
 
-public class BasicOdometry extends Thread {
+import TTT.libNXT.configuration.Configurateur;
+import TTT.libNXT.configuration.ConfigListener;
+
+public class BasicOdometry extends Thread implements ConfigListener {
 	private Pose currentPosition;
 
 	private Tachometer leftSensor;
@@ -32,19 +35,24 @@ public class BasicOdometry extends Thread {
 	private float COEF_D;
 	private float COEF_H;
 
+	private int sleepTime;
+
 	//TODO Remove
 	private Connexion conn;
 
-	public BasicOdometry(Tachometer left, int leftRatio,
-			   Tachometer right, int rightRatio, float coef_d, float coef_h){
+	public BasicOdometry(Tachometer left, Tachometer right){
 		this.leftSensor = left;
 		this.rightSensor = right;
 
-		this.leftRatio = leftRatio;
-		this.rightRatio = rightRatio;
+		Configurateur conf = Configurateur.getInstance();
 
-		this.COEF_D = coef_d;
-		this.COEF_H = coef_h;
+		this.leftRatio = Integer.parseInt(conf.get("odo.leftRatio","1"));
+		this.rightRatio = Integer.parseInt(conf.get("odo.leftRight","1"));
+
+		this.COEF_D = Float.parseFloat(conf.get("odo.coefD","1"));
+		this.COEF_H = Float.parseFloat(conf.get("odo.coefH","1"));
+
+		this.sleepTime = Integer.parseInt(conf.get("odo.sleepTime","10"));
 
 		this.currentPosition = new Pose();
 
@@ -53,6 +61,8 @@ public class BasicOdometry extends Thread {
 
 		//TODO Remove
 		this.conn = Connexion.getInstance();
+
+		conf.addConfigListener(this,"odo");
 
 		this.initTachos();
 	}
@@ -81,7 +91,7 @@ public class BasicOdometry extends Thread {
 		int prevOrient = this.orient;
 
 		//TODO Remove
-		this.conn.send(new Error("LEFT "+currentLeftCount + " RIGHT " + currentRightCount));
+		//this.conn.send(new Error("LEFT "+currentLeftCount + " RIGHT " + currentRightCount));
 
 		this.distance = (currentLeftCount + currentRightCount)/2;
 		this.orient = (currentLeftCount - currentRightCount);
@@ -149,12 +159,27 @@ public class BasicOdometry extends Thread {
 		while(!this.isInterrupted()){
 			try{
 				this.calculation();
-				Thread.sleep(10); //TODO fix sleep time
+				Thread.sleep(this.sleepTime);
 			} catch(InterruptedException e){
 				this.interrupt();
 			}
 		}
 	}
 
-
+	@Override
+	public void configChanged(String key, String value){
+		if(key.equals("odo.leftRatio")){
+			this.leftRatio = Integer.parseInt(value);
+		} else if(key.equals("odo.rightRatio")){
+			this.rightRatio = Integer.parseInt(value);
+		} else if(key.equals("odo.coefD")){
+			this.COEF_D = Float.parseFloat(value);
+		} else if(key.equals("odo.coefH")){
+			this.COEF_H = Float.parseFloat(value);
+		} else if(key.equals("odo.sleepTime")){
+			this.sleepTime = Integer.parseInt(value);
+		} else {
+			this.conn.send(new Error("Unknow " + key));
+		}
+	}
 }

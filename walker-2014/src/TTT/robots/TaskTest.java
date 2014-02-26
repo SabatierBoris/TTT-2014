@@ -9,7 +9,10 @@ import TTT.commons.navigation.PoseListener;
 import TTT.libNXT.navigation.BasicOdometry;
 import TTT.libNXT.navigation.AbstractAsservise;
 
-public class TaskTest extends Thread implements PoseListener {
+import TTT.libNXT.configuration.Configurateur;
+import TTT.libNXT.configuration.ConfigListener;
+
+public class TaskTest extends Thread implements PoseListener, ConfigListener {
 	private AbstractAsservise asserv;
 
 	private int currentLinearSpeed;
@@ -41,8 +44,20 @@ public class TaskTest extends Thread implements PoseListener {
 		this.currentPose = new Pose();
 		//TODO Remove
 		this.conn = Connexion.getInstance();
-
+		Configurateur conf = Configurateur.getInstance();
+		conf.addConfigListener(this,"test");
 		odo.addPoseListener(this);
+	}
+
+	@Override
+	public void configChanged(String key, String value){
+		this.conn.send(new Error(key + " -> " + value));
+		if(key.equals("test.lineSpeed")){
+			this.currentLinearSpeed = Integer.parseInt(value);
+		} else if (key.equals("test.angleSpeed")){
+			this.currentAngularSpeed = Integer.parseInt(value);
+		}
+		this.applySpeed();
 	}
 
 	private void applySpeed(){
@@ -75,6 +90,9 @@ public class TaskTest extends Thread implements PoseListener {
 		int stopDistance;
 		int tmp;
 		try{
+			while(true){
+				Thread.sleep(100);
+			}
 		/*
 			Thread.sleep(5000);
 
@@ -123,8 +141,9 @@ public class TaskTest extends Thread implements PoseListener {
 
 
 
+			/*
 			Thread.sleep(2000);
-			this.currentLinearSpeed = -10;
+			this.currentLinearSpeed = 10;
 			this.currentAngularSpeed = 0;
 			this.applySpeed();
 
@@ -144,6 +163,7 @@ public class TaskTest extends Thread implements PoseListener {
 			this.currentLinearSpeed = 0;
 			this.currentAngularSpeed = 0;
 			this.applySpeed();
+			*/
 /*			System.out.println("Accel");
 			while(this.currentLinearSpeed < TaskTest1.maxLinearSpeed){
 				Thread.sleep(10);
