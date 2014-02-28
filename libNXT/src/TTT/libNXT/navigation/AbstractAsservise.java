@@ -130,7 +130,7 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 			this.currentAngularSpeed = (int)(diffOrient/diffTime);
 
 			//TODO Remove
-//			this.conn.send(new Error("LS "+this.currentLinearSpeed + " AS " + this.currentAngularSpeed));
+			this.conn.send(new Error("LS "+this.currentLinearSpeed + " AS " + this.currentAngularSpeed));
 //			this.conn.send(new Error("AS "+this.currentAngularSpeed));
 
 			this.lastDistance = this.currentDistance;

@@ -9,6 +9,7 @@ import lejos.nxt.comm.NXTConnection;
 
 import TTT.commons.communication.Communicator;
 import TTT.commons.communication.Message;
+import TTT.commons.communication.MessageListener;
 
 public class Connexion extends Thread{
 	private static Connexion instance = new Connexion();

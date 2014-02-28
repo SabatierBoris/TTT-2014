@@ -1,6 +1,4 @@
-package TTT.libNXT.communication;
-
-import TTT.commons.communication.Message;
+package TTT.commons.communication;
 
 public interface MessageListener {
 	public void messageReceived(Message m);

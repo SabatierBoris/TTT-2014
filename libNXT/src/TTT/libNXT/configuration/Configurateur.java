@@ -17,11 +17,11 @@ import java.io.IOException;
 import TTT.commons.communication.Message;
 import TTT.commons.communication.SetConfig;
 import TTT.commons.communication.GetConfig;
+import TTT.commons.communication.MessageListener;
 
 import TTT.libNXT.communication.Connexion;
-import TTT.libNXT.communication.MessageListener;
 
-public class Configurateur extends Thread implements MessageListener{
+public class Configurateur extends Thread implements MessageListener {
 	private static Configurateur instance = new Configurateur();
 
 	private static final String configFile = "config.properties";

@@ -3,6 +3,8 @@ package TTT.PC.controllers;
 import TTT.PC.models.communication.ConnexionModel;
 import TTT.PC.models.communication.ConnexionListener;
 
+import TTT.commons.communication.Battery;
+
 public class ConnexionController {
 	private ConnexionModel model = null;
 
@@ -21,5 +23,9 @@ public class ConnexionController {
 		} else {
 			this.model.connect();
 		}
+	}
+
+	public void sendForward(){
+		this.model.send(new Battery());
 	}
 }

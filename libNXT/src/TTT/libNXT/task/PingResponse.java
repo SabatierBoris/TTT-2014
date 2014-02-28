@@ -4,9 +4,9 @@ import java.util.Queue;
 
 import TTT.commons.communication.Message;
 import TTT.commons.communication.Ping;
+import TTT.commons.communication.MessageListener;
 
 import TTT.libNXT.communication.Connexion;
-import TTT.libNXT.communication.MessageListener;
 
 public class PingResponse extends Thread implements MessageListener{
 	private Queue<Ping> queue;

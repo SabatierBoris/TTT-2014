@@ -13,11 +13,13 @@ public class Communicator {
 	private static Communicator instance = new Communicator();
 
 	private MessagesFactory facto;
+	private InputStreamReader rawIn;
 	private BufferedReader dataIn;
 	private BufferedWriter dataOut;
 
 	private Communicator(){
 		this.facto = new MessagesFactory();
+		this.rawIn = null;
 		this.dataIn = null;
 		this.dataOut = null;
 	}
@@ -32,8 +34,9 @@ public class Communicator {
 
 	public boolean connect(InputStream in, OutputStream out){
 		try{
-			this.dataIn  = new BufferedReader(new InputStreamReader(in,"ISO-8859-1"));
-			this.dataOut = new BufferedWriter(new OutputStreamWriter(out,"ISO-8859-1"));
+			this.rawIn = new InputStreamReader(in,"ISO-8859-1");
+			this.dataIn  = new BufferedReader(this.rawIn,100);
+			this.dataOut = new BufferedWriter(new OutputStreamWriter(out,"ISO-8859-1"),100);
 		} catch(UnsupportedEncodingException e){
 			this.close();
 			return false;
@@ -42,6 +45,13 @@ public class Communicator {
 	}
 
 	public void close(){
+		if(this.rawIn != null){
+			try{
+				this.rawIn.close();
+			} catch(IOException e){
+			}
+			this.rawIn = null;
+		}
 		if(this.dataIn != null){
 			try{
 				this.dataIn.close();
@@ -68,6 +78,14 @@ public class Communicator {
 			return false;
 		}
 		return true;
+	}
+
+	public boolean isReadyToRead(){
+		try{
+			return this.dataIn.ready();
+		} catch(IOException e){
+			return false;
+		}
 	}
 
 	public Message readMessage(){

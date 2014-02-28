@@ -2,6 +2,9 @@ package TTT.robots;
 
 import TTT.libNXT.communication.Connexion;
 import TTT.commons.communication.Error;
+import TTT.commons.communication.Battery;
+import TTT.commons.communication.MessageListener;
+import TTT.commons.communication.Message;
 
 import TTT.commons.navigation.Pose;
 import TTT.commons.navigation.PoseListener;
@@ -12,7 +15,7 @@ import TTT.libNXT.navigation.AbstractAsservise;
 import TTT.libNXT.configuration.Configurateur;
 import TTT.libNXT.configuration.ConfigListener;
 
-public class TaskTest extends Thread implements PoseListener, ConfigListener {
+public class TaskTest extends Thread implements PoseListener, ConfigListener, MessageListener {
 	private AbstractAsservise asserv;
 
 	private int currentLinearSpeed;
@@ -31,12 +34,14 @@ public class TaskTest extends Thread implements PoseListener, ConfigListener {
 
 	private Pose targetPose;
 	private Pose currentPose;
+	private boolean walk;
 
 	//TODO Remove
 	private Connexion conn;
 
 	public TaskTest(BasicOdometry odo, AbstractAsservise asserv){
 		super();
+		this.walk = false;
 		this.currentLinearSpeed = 0;
 		this.currentAngularSpeed = 0;
 		this.asserv = asserv;
@@ -44,9 +49,17 @@ public class TaskTest extends Thread implements PoseListener, ConfigListener {
 		this.currentPose = new Pose();
 		//TODO Remove
 		this.conn = Connexion.getInstance();
+		this.conn.addMessageListener(this,Battery.ID);
 		Configurateur conf = Configurateur.getInstance();
 		conf.addConfigListener(this,"test");
 		odo.addPoseListener(this);
+	}
+
+	@Override
+	public void messageReceived(Message m){
+		if(m.getId() == Battery.ID){
+			this.walk = true;
+		}
 	}
 
 	@Override
@@ -91,7 +104,34 @@ public class TaskTest extends Thread implements PoseListener, ConfigListener {
 		int tmp;
 		try{
 			while(true){
-				Thread.sleep(100);
+				Thread.sleep(1000);
+				if(this.walk == true){
+					this.conn.send(new Error("START WALK"));
+					this.currentLinearSpeed = 2;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					Thread.sleep(5000);
+					this.conn.send(new Error("STOP WALK"));
+					this.currentLinearSpeed = 0;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					this.currentLinearSpeed = 0;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					this.currentLinearSpeed = 0;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					this.currentLinearSpeed = 0;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					this.currentLinearSpeed = 0;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					this.currentLinearSpeed = 0;
+					this.currentAngularSpeed = 0;
+					this.applySpeed();
+					this.walk = false;
+				}
 			}
 		/*
 			Thread.sleep(5000);
