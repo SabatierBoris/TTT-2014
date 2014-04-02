@@ -2,14 +2,14 @@ package TTT.commons.navigation;
 
 public class Pose {
 	private Point location;
-	private int heading;
+	private double heading;
 
-	public Pose(int x, int y, int heading){
+	public Pose(double x, double y, double heading){
 		this.location = new Point(x,y);
 		this.setHeading(heading);
 	}
 
-	public Pose(Point p, int heading){
+	public Pose(Point p, double heading){
 		this(p.getX(), p.getY(), heading);
 	}
 
@@ -21,7 +21,7 @@ public class Pose {
 		this(p,0);
 	}
 
-	public Pose(int x, int y){
+	public Pose(double x, double y){
 		this(x,y,0);
 	}
 
@@ -33,7 +33,7 @@ public class Pose {
 		return this.location;
 	}
 
-	public int getHeading(){
+	public double getHeading(){
 		return this.heading;
 	}
 
@@ -41,12 +41,12 @@ public class Pose {
 		this.setLocation(p.getX(), p.getY());
 	}
 
-	public void setLocation(int x, int y){
+	public void setLocation(double x, double y){
 		this.location.setX(x);
 		this.location.setY(y);
 	}
 
-	public void setHeading(int heading){
+	public void setHeading(double heading){
 		heading %= 360;
 		if(heading < 0){
 			heading += 360;
@@ -54,15 +54,15 @@ public class Pose {
 		this.heading = heading;
 	}
 
-	public void move(float distance, int newHeading){
+	public void move(float distance, double newHeading){
 		this.setHeading(newHeading);
 		this.move(distance);
 	}
 
 	public void move(float distance){
 		if(distance != 0){
-			int newX = this.location.getX();
-			int newY = this.location.getY();
+			double newX = this.location.getX();
+			double newY = this.location.getY();
 			double dx = 0;
 			double dy = 0;
 			if(this.heading == 0){
@@ -84,8 +84,8 @@ public class Pose {
 				dx = distance*sin;
 				dy = distance*cos;
 			}
-			newX += Math.round(dx);
-			newY += Math.round(dy);
+			newX += dx;
+			newY += dy;
 			this.setLocation(newX,newY);
 		}
 	}
@@ -106,14 +106,14 @@ public class Pose {
 		return this.location.toString() + "," + this.heading;
 	}
 
-	public int getAngleTo(Pose p){
+	public double getAngleTo(Pose p){
 		return this.getAngleTo(p.getLocation());
 	}
 
-	public int getAngleTo(Point p){
+	public double getAngleTo(Point p){
 		Point tmp = p.substract(this.getLocation());
-		int x = tmp.getX();
-		int y = tmp.getY();
+		double x = tmp.getX();
+		double y = tmp.getY();
 		if(x == 0){
 			if(y >= 0){
 				return 0;
@@ -121,7 +121,7 @@ public class Pose {
 				return 180;
 			}
 		}
-		int angle = (int)Math.round(Math.toDegrees(Math.atan(y/x)));
+		double angle = Math.toDegrees(Math.atan(y/x));
 		if(x >= 0){
 			if(y >= 0){
 				return 90 - angle;

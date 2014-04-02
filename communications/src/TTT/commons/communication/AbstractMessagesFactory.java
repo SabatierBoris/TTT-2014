@@ -15,7 +15,7 @@ public abstract class AbstractMessagesFactory extends AbstractFactory{
 		String buff;
 		Message mes;
 		try {
-			StringTokenizer st = new StringTokenizer(data,":");
+			StringTokenizer st = new StringTokenizer(data,Message.DELIMITER);
 			type = Integer.parseInt(st.nextToken());
 			buff = st.nextToken();
 			if(st.hasMoreElements()){

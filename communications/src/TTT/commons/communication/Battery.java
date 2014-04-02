@@ -9,7 +9,7 @@ public class Battery extends Message {
 
 	@Override
 	public String toString(){
-		return ID + ":" + value;
+		return ID + Message.DELIMITER + value;
 	}
 
 	@Override

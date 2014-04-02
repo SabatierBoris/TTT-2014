@@ -22,6 +22,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 			case Error.ID:
 				ret = new Error();
 				break;
+			case FixLinearAsservMessage.ID:
+				ret = new FixLinearAsservMessage();
+				break;
 			case GetConfig.ID:
 				ret = new GetConfig();
 				break;

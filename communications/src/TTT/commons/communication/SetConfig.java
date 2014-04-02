@@ -7,6 +7,7 @@ import TTT.commons.factory.ItemFactory;
 
 @ItemFactory(factoryName="TTT.commons.communication.Messages")
 public class SetConfig extends Message {
+	public static final String DELIMITER = ":";
 	public static final int ID = 4;
 	private String key;
 	private String value;
@@ -22,13 +23,13 @@ public class SetConfig extends Message {
 
 	@Override
 	public String toString(){
-		return SetConfig.ID + ":" + this.key + "-" + this.value;
+		return SetConfig.ID + Message.DELIMITER + this.key + SetConfig.DELIMITER + this.value;
 	}
 
 	@Override
 	public void parse(String data) throws ParsingFailException {
 		try{
-			StringTokenizer st = new StringTokenizer(data,"-");
+			StringTokenizer st = new StringTokenizer(data,SetConfig.DELIMITER);
 			this.key = st.nextToken();
 			this.value = st.nextToken();
 		} catch(NoSuchElementException e){

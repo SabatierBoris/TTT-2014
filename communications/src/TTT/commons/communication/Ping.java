@@ -7,6 +7,7 @@ import TTT.commons.factory.ItemFactory;
 
 @ItemFactory(factoryName="TTT.commons.communication.Messages")
 public class Ping extends Message {
+	public static final String DELIMITER = ":";
 	public static final int ID = 2;
 	public static int count = 0;
 	private int num;
@@ -19,13 +20,13 @@ public class Ping extends Message {
 
 	@Override
 	public String toString(){
-		return Ping.ID + ":" + this.num + "-" + this.direction;
+		return Ping.ID + Message.DELIMITER + this.num + Ping.DELIMITER + this.direction;
 	}
 
 	@Override
 	public void parse(String data) throws ParsingFailException {
 		try{
-			StringTokenizer st = new StringTokenizer(data,"-");
+			StringTokenizer st = new StringTokenizer(data,Ping.DELIMITER);
 			this.num = Integer.parseInt(st.nextToken());
 			this.direction = Integer.parseInt(st.nextToken());
 		} catch(NumberFormatException e){
