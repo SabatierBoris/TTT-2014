@@ -25,39 +25,33 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 
 	@Override
 	public void run(){
-		/*
-		synchronized(this.state){
+		synchronized(this){
 			try{
 				while(!this.isInterrupted()){
-					switch(this.state){
-						case FORWARD:
-							this.asserv.reset();
-							this.asserv.setTarget(50,0);
-							this.asserv.lockLinear();
-							break;
-						case BACKWARD:
-							this.asserv.reset();
-							this.asserv.setTarget(-50,0);
-							this.asserv.lockLinear();
-							break;
-						case STOP:
-						default:
-							this.asserv.freeLinear();
-							this.asserv.setTarget(0,0);
-							this.asserv.reset();
+					if(this.state == FixAsservState.FORWARD){
+						this.asserv.reset();
+						this.asserv.setTarget(50,0);
+						this.asserv.lockLinear();
+					}else if(this.state == FixAsservState.BACKWARD){
+						this.asserv.reset();
+						this.asserv.setTarget(-50,0);
+						this.asserv.lockLinear();
+					}else{
+						this.asserv.freeLinear();
+						this.asserv.setTarget(0,0);
+						this.asserv.reset();
 					}
-					this.state.wait();
+					this.wait();
 				}
 			}catch(InterruptedException e){
 				this.interrupt();
 			}
 		}
-		*/
 	}
 
 	@Override
 	public void messageReceived(Message m){
-		synchronized(this.state){
+		synchronized(this){
 			this.i++;
 			this.i%=4;
 			switch(i){
@@ -73,7 +67,7 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 					this.state = FixAsservState.BACKWARD;
 					break;
 			}
-			this.state.notify();
+			this.notify();
 		}
 	}
 }

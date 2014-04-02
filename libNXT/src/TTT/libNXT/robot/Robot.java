@@ -21,9 +21,11 @@ public class Robot {
 
 	public void run(){
 		long currentTick,startedTick;
+		/* TODO
 		while(!this.starter.isPressed()){
 			Thread.yield();
 		}
+		*/
 		for(Thread t : this.tasks){
 			t.setDaemon(true);
 			t.start();
