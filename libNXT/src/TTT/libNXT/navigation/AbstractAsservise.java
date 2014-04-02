@@ -7,7 +7,7 @@ import TTT.libNXT.communication.Connexion;
 import TTT.libNXT.configuration.Configurateur;
 import TTT.libNXT.configuration.ConfigListener;
 
-import lejos.robotics.RegulatedMotor;
+import lejos.nxt.NXTMotor;
 
 public abstract class AbstractAsservise extends Thread implements CodeursListener, ConfigListener {
 	protected long lastUpdateTick;
@@ -26,19 +26,19 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 	protected int currentLinearSpeed;
 	protected int currentAngularSpeed;
 
-	private RegulatedMotor m1;
-	private RegulatedMotor m2;
+	private NXTMotor m1;
+	private NXTMotor m2;
 
 	private int m1Speed;
 	private int m2Speed;
 
-	private int lineP;
+	private float lineP;
 	private int angleP;
 
-	private int lineI;
+	private float lineI;
 	private int angleI;
 	
-	private int lineD;
+	private float lineD;
 	private int angleD;
 
 	private int previousLinearError;
@@ -50,16 +50,26 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 	private int previousLinearSpeed;
 	private int previousAngularSpeed;
 
+	private boolean linearLock;
+	private boolean angularLock;
+	private boolean m1Float;
+	private boolean m2Float;
+
 	//TODO Remove
 	private Connexion conn;
 
-	public AbstractAsservise(BasicOdometry odo, RegulatedMotor m1, RegulatedMotor m2){
+	public AbstractAsservise(BasicOdometry odo, NXTMotor m1, NXTMotor m2){
 		super();
 		Configurateur conf = Configurateur.getInstance();
 
-		this.lineP = Integer.parseInt(conf.get("asserv.lineP","1"));
-		this.lineI = Integer.parseInt(conf.get("asserv.lineI","1"));
-		this.lineD = Integer.parseInt(conf.get("asserv.lineD","1"));
+		this.linearLock = false;
+		this.angularLock = false;
+		this.m1Float = true;
+		this.m2Float = true;
+
+		this.lineP = Float.parseFloat(conf.get("asserv.lineP","1"));
+		this.lineI = Float.parseFloat(conf.get("asserv.lineI","1"));
+		this.lineD = Float.parseFloat(conf.get("asserv.lineD","1"));
 
 		this.angleP = Integer.parseInt(conf.get("asserv.angleP","1"));
 		this.angleI = Integer.parseInt(conf.get("asserv.angleI","1"));
@@ -93,6 +103,14 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		conf.addConfigListener(this,"asserv");
 	}
 
+	public int getCurrentLinearSpeed(){
+		return this.currentLinearSpeed;
+	}
+
+	public int getCurrentAngularSpeed(){
+		return this.currentAngularSpeed;
+	}
+
 	public void setM1Speed(int s){
 		this.m1Speed = s;
 	}
@@ -113,29 +131,36 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		synchronized(this){
 			this.targetLinearSpeed = linearSpeed;
 			this.targetAngularSpeed = angularSpeed;
-			this.reset();
+			//this.reset();
 			this.notify();
 		}
 	}
 
-	public void currentSpeedsCalculation(){
+	public boolean currentSpeedsCalculation(){
 		long currentTick = System.currentTimeMillis();
 		long diffTime = (currentTick - this.lastUpdateTick)/AbstractAsservise.ratioTick;
 
-		if(diffTime != 0){
+		if(diffTime > 10){ //TODO Param
 			int diffDistance = this.currentDistance - this.lastDistance;
 			int diffOrient = this.currentOrient - this.lastOrient;
+//			this.conn.send(new Error("Diff time = " + diffTime));
 
-			this.currentLinearSpeed = (int)(diffDistance/diffTime);
-			this.currentAngularSpeed = (int)(diffOrient/diffTime);
+//			this.currentLinearSpeed = (int)(diffDistance/diffTime);
+			this.currentLinearSpeed = diffDistance;
+//			this.currentAngularSpeed = (int)(diffOrient/diffTime);
+			this.currentAngularSpeed = diffOrient;
 
 			//TODO Remove
-			this.conn.send(new Error("LS "+this.currentLinearSpeed + " AS " + this.currentAngularSpeed));
+//			this.conn.send(new Error("Distance " + diffDistance + " Speed " + this.currentLinearSpeed));
+//			this.conn.send(new Error("LS "+this.currentLinearSpeed + " AS " + this.currentAngularSpeed));
 //			this.conn.send(new Error("AS "+this.currentAngularSpeed));
 
 			this.lastDistance = this.currentDistance;
 			this.lastOrient = this.currentOrient;
 			this.lastUpdateTick = currentTick;
+			return true;
+		}else{
+			return false;
 		}
 	}
 
@@ -144,9 +169,10 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		synchronized(this){
 			try{
 				while(!this.isInterrupted()){
-					this.currentSpeedsCalculation();
-					this.speedsCalculation();
-					this.applySpeeds();
+					if(this.currentSpeedsCalculation()){
+						this.speedsCalculation();
+						this.applySpeeds();
+					}
 					this.wait();
 				}
 			} catch(InterruptedException e){
@@ -156,22 +182,25 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 	}
 
 	public void applySpeeds(){
-		this.m1.setSpeed(this.m1Speed);
-		this.m2.setSpeed(this.m2Speed);
-
-		if(this.m1Speed == 0){
-			this.m1.stop();
-		} else if(this.m1Speed > 0){
-			this.m1.forward();
+		if(this.m1Float == false){
+			this.m1.setPower(this.m1Speed);
+			if(this.m1Speed == 0){
+				this.m1.stop();
+			} else {
+				this.m1.forward();
+			}
 		} else {
-			this.m1.backward();
+			this.m1.flt();
 		}
-		if(this.m2Speed == 0){
-			this.m2.stop();
-		} else if(this.m2Speed > 0){
-			this.m2.forward();
+		if(this.m2Float == false){
+			this.m2.setPower(this.m2Speed);
+			if(this.m2Speed == 0){
+				this.m2.stop();
+			} else {
+				this.m2.forward();
+			}
 		} else {
-			this.m2.backward();
+			this.m2.flt();
 		}
 	}
 
@@ -187,12 +216,46 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		int changeLinearError = currentLinearError - this.previousLinearError;
 		this.sumLinearError += currentLinearError;
 		regulatedLinearError = Math.round((this.lineP * currentLinearError) + (this.lineI * this.sumLinearError) + (this.lineD * changeLinearError));
-		linearSpeed = this.previousLinearSpeed + regulatedLinearError;
+		linearSpeed = regulatedLinearError;
+
+		//this.conn.send(new Error(this.targetLinearSpeed + ";" + this.currentLinearSpeed + " ; " + linearSpeed + "=" + this.lineP + "*" + currentLinearError + " + " + this.lineI + "*" + this.sumLinearError + " + " + this.lineD + "*" + changeLinearError));
+		//this.conn.send(new Error(this.currentLinearSpeed + " ; " + linearSpeed + "=" + this.lineP + "*" + currentLinearError));
+		
+		this.conn.send(new Error(this.targetLinearSpeed + "    -     " + this.currentLinearSpeed + "    -   " + this.sumLinearError));
 
 		int changeAngularError = currentAngularError - this.previousAngularError;
 		this.sumAngularError += currentAngularError;
 		regulatedAngularError = Math.round((this.angleP * currentAngularError) + (this.angleI * this.sumAngularError) + (this.angleD * changeAngularError));
-		angularSpeed = this.previousAngularSpeed + regulatedAngularError;
+		angularSpeed = regulatedAngularError;
+
+//		this.conn.send(new Error(this.targetAngularSpeed + "    -     " + this.currentAngularSpeed + "    -   " + angularSpeed));
+
+
+
+
+
+//		this.conn.send(new Error("PERROR " + this.lineP*currentLinearError +
+//								 " IERROR " + this.lineI*this.sumLinearError +
+//								 " DERROR " + this.lineD*changeLinearError));
+//		this.conn.send(new Error("Target " + this.targetLinearSpeed + 
+//								 " Current " + this.currentLinearSpeed +
+//								 " Error " + currentLinearError +
+//								 " Previous " + this.previousLinearSpeed +
+//								 " RegulatedError " + regulatedLinearError +
+//								 " NextSpeed " + linearSpeed));
+/*
+		this.conn.send(new Error("" + this.targetLinearSpeed + 
+								 ";" + this.currentLinearSpeed +
+								 ";" + currentLinearError +
+								 ";" + this.previousLinearSpeed +
+								 ";" + regulatedLinearError +
+								 ";" + linearSpeed));
+*/
+		//this.conn.send(new Error("Target " + this.targetAngularSpeed + " Current " + this.currentAngularSpeed + " Error " + currentAngularError + " RegulatedError " + regulatedAngularError + " NextSpeed " + angularSpeed));
+		
+		if((linearSpeed < 0 && this.targetLinearSpeed > 0) || (linearSpeed > 0 && this.targetLinearSpeed < 0)){
+			linearSpeed = this.targetLinearSpeed;
+		}
 
 		this.speedsUpdate(linearSpeed,angularSpeed);
 
@@ -214,16 +277,17 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		if(this.targetAngularSpeed == 0){
 			this.previousAngularSpeed = 0;
 		}
+//		this.conn.send(new Error("Target;Current;Error;Previous;RegulatedError;NextSpeed"));
 	}
 
 	@Override
 	public void configChanged(String key, String value){
 		if(key.equals("asserv.lineP")){
-			this.lineP = Integer.parseInt(value);
+			this.lineP = Float.parseFloat(value);
 		} else if(key.equals("asserv.lineI")){
-			this.lineI = Integer.parseInt(value);
+			this.lineI = Float.parseFloat(value);
 		} else if(key.equals("asserv.lineD")){
-			this.lineD = Integer.parseInt(value);
+			this.lineD = Float.parseFloat(value);
 		} else if(key.equals("asserv.angleP")){
 			this.angleP = Integer.parseInt(value);
 		} else if(key.equals("asserv.angleI")){
@@ -233,6 +297,32 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		} else {
 			this.conn.send(new Error("Unknow " + key));
 		}
+	}
+
+	public boolean linearIsLock(){
+		return this.linearLock;
+	}
+	public boolean angularIsLock(){
+		return this.angularLock;
+	}
+	public void lockLinear(){
+		this.linearLock = true;
+	}
+	public void freeLinear(){
+		this.linearLock = false;
+	}
+	public void lockAngular(){
+		this.angularLock = true;
+	}
+	public void freeAngular(){
+		this.angularLock = false;
+	}
+
+	public void setM1Float(boolean value){
+		this.m1Float = value;
+	}
+	public void setM2Float(boolean value){
+		this.m2Float = value;
 	}
 
 	protected abstract void speedsUpdate(int linearSpeed, int angularSpeed);
