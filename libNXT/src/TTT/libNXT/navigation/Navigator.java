@@ -86,7 +86,7 @@ public class Navigator extends Thread implements PoseListener{
 		long distance = 0;
 		int angle = 0;
 		if(this.phase == 1){
-			angle = current.getAngleTo(target);
+			angle = (int)Math.round(current.getAngleTo(target));
 			if(angle == 0){
 				this.reset();
 				this.phase = 2;
@@ -102,7 +102,7 @@ public class Navigator extends Thread implements PoseListener{
 		}
 		if(this.phase == 3){
 			Pose error = target.substract(current);
-			angle = error.getHeading();
+			angle = (int)Math.round(error.getHeading());
 			if(angle == 0){
 				this.reset();
 				this.phase = 0;

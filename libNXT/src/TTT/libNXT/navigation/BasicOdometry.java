@@ -47,7 +47,7 @@ public class BasicOdometry extends Thread implements ConfigListener {
 		Configurateur conf = Configurateur.getInstance();
 
 		this.leftRatio = Integer.parseInt(conf.get("odo.leftRatio","1"));
-		this.rightRatio = Integer.parseInt(conf.get("odo.leftRight","1"));
+		this.rightRatio = Integer.parseInt(conf.get("odo.rightRatio","1"));
 
 		this.COEF_D = Float.parseFloat(conf.get("odo.coefD","1"));
 		this.COEF_H = Float.parseFloat(conf.get("odo.coefH","1"));
@@ -77,11 +77,20 @@ public class BasicOdometry extends Thread implements ConfigListener {
 		this.orient = 0;
 	}
 
+	private int getTachoCount(Tachometer tacho, int ratio){
+		int value = tacho.getTachoCount();
+		if(value == 0){
+			value = tacho.getTachoCount();
+		}
+		return value*ratio;
+	}
+
+
 	private int getLeftCount(){
-		return this.leftSensor.getTachoCount() * this.leftRatio;
+		return this.getTachoCount(this.leftSensor,this.leftRatio);
 	}
 	private int getRightCount(){
-		return this.rightSensor.getTachoCount() * this.rightRatio;
+		return this.getTachoCount(this.rightSensor,this.rightRatio);
 	}
 
 	void calculation(){
@@ -90,13 +99,14 @@ public class BasicOdometry extends Thread implements ConfigListener {
 		int prevDistance = this.distance;
 		int prevOrient = this.orient;
 
-		//TODO Remove
-		//this.conn.send(new Error("LEFT "+currentLeftCount + " RIGHT " + currentRightCount));
+//		System.out.println(currentLeftCount + " " + currentRightCount);
 
 		this.distance = (currentLeftCount + currentRightCount)/2;
+		//this.conn.send(new Error("Distance " + this.distance));
 		this.orient = (currentLeftCount - currentRightCount);
 		this.fireCodeursChanged(this.distance,this.orient);
 		if(currentLeftCount != this.lastLeftCount || currentRightCount != this.lastRightCount){
+			//this.conn.send(new Error(this.toString() + " - " + distance + " - " + orient));
 			Pose newPose, tmpPose;
 			Pose current = this.getCurrentPose();
 			newPose = new Pose(current);
@@ -104,8 +114,10 @@ public class BasicOdometry extends Thread implements ConfigListener {
 			int delta_distance = this.distance - prevDistance;
 			int delta_orient = (this.orient + prevOrient)/2;
 
-			//TODO newPose.move(delta_distance/COEF_D,newPose.getHeading()+Math.round(delta_orient/COEF_H));
-			newPose.move(delta_distance/COEF_D);
+//			this.conn.send(new Error("Delta-O " + delta_orient/this.COEF_H));
+
+			newPose.move(delta_distance/this.COEF_D,delta_orient/this.COEF_H);
+			//newPose.move(delta_distance/COEF_D);
 
 			tmpPose = this.getCurrentPose();
 			// If a new position is set by someone else during the calculation, we ignore the calculation
@@ -119,6 +131,7 @@ public class BasicOdometry extends Thread implements ConfigListener {
 	}
 
 	private void fireCodeursChanged(int distance, int orient){
+//		this.conn.send(new Error(this.toString() + " - " + distance + " - " + orient));
 		for(CodeursListener listener : this.codeursListeners){
 			listener.codeursChanged(distance,orient);
 		}
@@ -136,8 +149,9 @@ public class BasicOdometry extends Thread implements ConfigListener {
 	}
 
 	private void firePoseChanged(Pose p){
+		//this.conn.send(new Error(this.toString() + "-" + p.toString()));
 		for(PoseListener listener : this.poseListeners){
-			listener.poseChanged(p);
+			listener.poseChanged(new Pose(p));
 		}
 	}
 
