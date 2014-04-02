@@ -39,7 +39,9 @@ public class MainView extends JFrame {
 		ConfigController confControl = new ConfigController(confModel);
 
 		ConnexionViewStatusBar statusBar = new ConnexionViewStatusBar(connControl);
-		this.getContentPane().add(new JScrollPane(new JTable(new ConfigTableModel(connControl,confControl))),BorderLayout.CENTER);
+		JTable configTable = new JTable(new ConfigTableModel(connControl,confControl));
+		configTable.setAutoCreateRowSorter(true);
+		this.getContentPane().add(new JScrollPane(configTable),BorderLayout.CENTER);
 		this.getContentPane().add(new BottomPanel(statusBar), BorderLayout.SOUTH);
 
 		JMenuBar menuBar = new JMenuBar();

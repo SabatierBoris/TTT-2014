@@ -3,7 +3,7 @@ package TTT.PC.controllers;
 import TTT.PC.models.communication.ConnexionModel;
 import TTT.PC.models.communication.ConnexionListener;
 
-import TTT.commons.communication.Battery;
+import TTT.commons.communication.FixLinearAsservMessage;
 
 public class ConnexionController {
 	private ConnexionModel model = null;
@@ -26,6 +26,6 @@ public class ConnexionController {
 	}
 
 	public void sendForward(){
-		this.model.send(new Battery());
+		this.model.send(new FixLinearAsservMessage());
 	}
 }
