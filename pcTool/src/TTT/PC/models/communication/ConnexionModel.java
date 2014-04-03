@@ -42,7 +42,7 @@ public class ConnexionModel extends Thread{
 	}
 
 	private void fireMessagereceived(Message m){
-		System.out.println(m);
+		//System.out.println(m);
 		if(this.messageListeners != null && this.messageListeners.get(m.getId()) != null){
 			for(MessageListener listener : this.messageListeners.get(m.getId())){
 				listener.messageReceived(m);
@@ -156,7 +156,7 @@ public class ConnexionModel extends Thread{
 			if(!this.comm.sendMessage(m)){
 				this.close();
 			} else {
-				System.out.println(m);
+//				System.out.println(m);
 			}
 		}
 	}

@@ -4,6 +4,7 @@ import TTT.PC.models.communication.ConnexionModel;
 import TTT.PC.models.communication.ConnexionListener;
 
 import TTT.commons.communication.FixLinearAsservMessage;
+import TTT.commons.communication.FixAngularAsservMessage;
 
 public class ConnexionController {
 	private ConnexionModel model = null;
@@ -25,7 +26,11 @@ public class ConnexionController {
 		}
 	}
 
-	public void sendForward(){
+	public void sendFixLinearAsserv(){
 		this.model.send(new FixLinearAsservMessage());
+	}
+
+	public void sendFixAngularAsserv(){
+		this.model.send(new FixAngularAsservMessage());
 	}
 }
