@@ -103,6 +103,14 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		conf.addConfigListener(this,"asserv");
 	}
 
+	public int getTargetLinearSpeed(){
+		return this.targetLinearSpeed;
+	}
+
+	public int getTargetAngularSpeed(){
+		return this.targetAngularSpeed;
+	}
+
 	public int getCurrentLinearSpeed(){
 		return this.currentLinearSpeed;
 	}
@@ -221,7 +229,7 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		//this.conn.send(new Error(this.targetLinearSpeed + ";" + this.currentLinearSpeed + " ; " + linearSpeed + "=" + this.lineP + "*" + currentLinearError + " + " + this.lineI + "*" + this.sumLinearError + " + " + this.lineD + "*" + changeLinearError));
 		//this.conn.send(new Error(this.currentLinearSpeed + " ; " + linearSpeed + "=" + this.lineP + "*" + currentLinearError));
 		
-		this.conn.send(new Error(this.targetLinearSpeed + "    -     " + this.currentLinearSpeed + "    -   " + this.sumLinearError));
+//		this.conn.send(new Error(this.targetLinearSpeed + "    -     " + this.currentLinearSpeed + "    -   " + this.sumLinearError));
 
 		int changeAngularError = currentAngularError - this.previousAngularError;
 		this.sumAngularError += currentAngularError;

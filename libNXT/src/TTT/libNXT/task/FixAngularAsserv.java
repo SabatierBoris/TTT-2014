@@ -1,26 +1,26 @@
 package TTT.libNXT.task;
 
 import TTT.commons.communication.Message;
-import TTT.commons.communication.FixLinearAsservMessage;
+import TTT.commons.communication.FixAngularAsservMessage;
 import TTT.commons.communication.MessageListener;
 
 import TTT.libNXT.communication.Connexion;
 
 import TTT.libNXT.navigation.AbstractAsservise;
 
-public class FixLinearAsserv extends Thread implements MessageListener{
+public class FixAngularAsserv extends Thread implements MessageListener{
 	private AbstractAsservise asserv;
 	private Connexion conn;
 	private FixAsservState state;
 	private int i;
 
-	public FixLinearAsserv(AbstractAsservise asserv){
+	public FixAngularAsserv(AbstractAsservise asserv){
 		super();
 		this.i = 0;
 		this.state = FixAsservState.STOP;
 		this.asserv = asserv;
 		this.conn = Connexion.getInstance();
-		this.conn.addMessageListener(this,FixLinearAsservMessage.ID);
+		this.conn.addMessageListener(this,FixAngularAsservMessage.ID);
 	}
 
 	@Override
@@ -28,16 +28,16 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 		synchronized(this){
 			try{
 				while(!this.isInterrupted()){
-					if(this.state == FixAsservState.FORWARD){
+					if(this.state == FixAsservState.TURNLEFT){
 						this.asserv.reset();
-						this.asserv.setTarget(50,0);
-						this.asserv.lockLinear();
-					}else if(this.state == FixAsservState.BACKWARD){
+						this.asserv.setTarget(0,50);
+						this.asserv.lockAngular();
+					}else if(this.state == FixAsservState.TURNRIGHT){
 						this.asserv.reset();
-						this.asserv.setTarget(-50,0);
-						this.asserv.lockLinear();
+						this.asserv.setTarget(0,-50);
+						this.asserv.lockAngular();
 					}else{
-						this.asserv.freeLinear();
+						this.asserv.freeAngular();
 						this.asserv.setTarget(0,0);
 						this.asserv.reset();
 					}
@@ -52,7 +52,7 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 	@Override
 	public void messageReceived(Message m){
 		synchronized(this){
-			if(m.getId() == FixLinearAsservMessage.ID){
+			if(m.getId() == FixAngularAsservMessage.ID){
 				this.i++;
 				this.i%=4;
 				switch(i){
@@ -62,10 +62,10 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 						this.state = FixAsservState.STOP;
 						break;
 					case 1:
-						this.state = FixAsservState.FORWARD;
+						this.state = FixAsservState.TURNLEFT;
 						break;
 					case 3:
-						this.state = FixAsservState.BACKWARD;
+						this.state = FixAsservState.TURNRIGHT;
 						break;
 				}
 				this.notify();
