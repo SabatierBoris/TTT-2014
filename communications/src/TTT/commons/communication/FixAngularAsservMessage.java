@@ -3,12 +3,12 @@ package TTT.commons.communication;
 import TTT.commons.factory.ItemFactory;
 
 @ItemFactory(factoryName="TTT.commons.communication.Messages")
-public class FixLinearAsservMessage extends Message {
-	public static final int ID = 6;
+public class FixAngularAsservMessage extends Message {
+	public static final int ID = 7;
 
 	@Override
 	public String toString(){
-		return FixLinearAsservMessage.ID + Message.DELIMITER + "FIX";
+		return FixAngularAsservMessage.ID + Message.DELIMITER + "FIX";
 	}
 
 	@Override
@@ -17,6 +17,6 @@ public class FixLinearAsservMessage extends Message {
 
 	@Override
 	public int getId(){
-		return FixLinearAsservMessage.ID;
+		return FixAngularAsservMessage.ID;
 	}
 }

@@ -13,6 +13,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 			case Battery.ID:
 				ret = new Battery();
 				break;
+			case FixAngularAsservMessage.ID:
+				ret = new FixAngularAsservMessage();
+				break;
 			case SetConfig.ID:
 				ret = new SetConfig();
 				break;
@@ -21,6 +24,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 				break;
 			case Error.ID:
 				ret = new Error();
+				break;
+			case AsservInfo.ID:
+				ret = new AsservInfo();
 				break;
 			case FixLinearAsservMessage.ID:
 				ret = new FixLinearAsservMessage();
