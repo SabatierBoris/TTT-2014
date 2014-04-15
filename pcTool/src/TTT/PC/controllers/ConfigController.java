@@ -20,6 +20,10 @@ public class ConfigController {
 		this.model.getConfigList();
 	}
 
+	public void getConfig(String configName){
+		this.model.getConfig(configName);
+	}
+
 	public void updateConfig(Config conf,String newValue){
 		conf.setValue(newValue);
 		this.model.updateConfig(conf);

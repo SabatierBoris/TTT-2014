@@ -65,7 +65,17 @@ public class ConfigTableModel extends AbstractTableModel implements ConnexionLis
 
 	@Override
 	public void newConfig(Config conf){
-		this.data.add(conf);
+		boolean found = false;
+		for(Config c : this.data){
+			if(c.getKey().equals(conf.getKey())){
+				found = true;
+				c.setValue(conf.getValue());
+				break;
+			}
+		}
+		if(!found){
+			this.data.add(conf);
+		}
 		this.fireTableDataChanged();
 	}
 

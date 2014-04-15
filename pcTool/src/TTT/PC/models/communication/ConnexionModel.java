@@ -50,6 +50,13 @@ public class ConnexionModel extends Thread{
 		}
 	}
 
+	public void removeMessageListener(MessageListener listener, Integer t){
+		Collection<MessageListener> tmp = this.messageListeners.get(t);
+		if(tmp != null){
+			tmp.remove(listener);
+		}
+	}
+
 	public void addMessageListener(MessageListener listener, Integer t){
 		Collection<MessageListener> tmp = this.messageListeners.get(t);
 		if(tmp == null){

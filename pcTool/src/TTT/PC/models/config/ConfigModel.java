@@ -31,6 +31,10 @@ public class ConfigModel implements MessageListener {
 		this.conn.send(new GetConfig());
 	}
 
+	public void getConfig(String configName){
+		this.conn.send(new GetConfig(configName));
+	}
+
 	private void fireNewConfig(Config conf){
 		ConfigListener[] listenerlist = this.listeners.getListeners(ConfigListener.class);
 		for(ConfigListener listener : listenerlist){
@@ -49,6 +53,7 @@ public class ConfigModel implements MessageListener {
 
 	public void updateConfig(Config conf){
 		this.conn.send(new SetConfig(conf.getKey(),conf.getValue()));
+		this.fireNewConfig(conf);
 	}
 }
 
