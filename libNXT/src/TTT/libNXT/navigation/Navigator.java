@@ -3,129 +3,271 @@ package TTT.libNXT.navigation;
 import TTT.commons.navigation.Pose;
 import TTT.commons.navigation.PoseListener;
 
-public class Navigator extends Thread implements PoseListener{
-	private final int MIN_SPEED = 10;
-	private final int MAX_SPEED = 100;
-	private final int ACCEL = 2;
-	private Pose current;
+import TTT.libNXT.configuration.ConfigListener;
+import TTT.libNXT.configuration.Configurateur;
+
+public class Navigator extends Thread implements PoseListener, ConfigListener {
+	private MovingAction state;
+	private MovingState accelState;
+
+	private Pose currentPose;
 	private Pose target;
+
 	private AbstractAsservise asserv;
-	private int phase; // 0->Stop, 1->turning, 2->moving, 3->turning
 
-	private int previousAngleSpeed;
-	private int previousLinearSpeed;
+	private int stopDistance;
+	private int fullStopDistance;
+	private int maxLinearSpeed;
+	private int minLinearSpeed;
+	private double linearAccelSpeed;
 
-	private int currentAngleSpeed;
-	private int currentLinearSpeed;
+	private int stopAngle;
+	private int fullStopAngle;
+	private int maxAngularSpeed;
+	private int minAngularSpeed;
+	private double angularAccelSpeed;
 
-	private long lastUpdate;
+	private long prevTime;
 
 	public Navigator(BasicOdometry odo, AbstractAsservise asserv){
-		super();
-		odo.addPoseListener(this);
-		this.current = new Pose(odo.getCurrentPose());
-		this.target = new Pose(current);
-		this.phase = 0;
 		this.asserv = asserv;
-		this.previousAngleSpeed = 0;
-		this.previousLinearSpeed = 0;
-		this.currentAngleSpeed = 0;
-		this.currentLinearSpeed = 0;
-		this.lastUpdate = 0;
-		this.reset();
-	}
+		odo.addPoseListener(this);
+		this.currentPose = new Pose(odo.getCurrentPose());
+		this.target = new Pose(this.currentPose);
 
-	public void setTarget(Pose p){
-		synchronized(this){
-			this.target = new Pose(p);
-			this.reset();
-			this.phase = 1;
-			this.notify();
-		}
+		Configurateur conf = Configurateur.getInstance();
+
+		stopDistance		= Integer.parseInt(conf.get("nav.stopDistance","25")); 
+		fullStopDistance	= Integer.parseInt(conf.get("nav.fullStopDistance","10"));
+		maxLinearSpeed		= Integer.parseInt(conf.get("nav.maxLinearSpeed","100"));
+		minLinearSpeed		= Integer.parseInt(conf.get("nav.minLinearSpeed","50"));
+		linearAccelSpeed	= Double.parseDouble(conf.get("nav.linearAccepSpeed","0.1"));
+
+		stopAngle			= Integer.parseInt(conf.get("nav.stopAngle","25")); 
+		fullStopAngle		= Integer.parseInt(conf.get("nav.fullStopAngle","10"));
+		maxAngularSpeed		= Integer.parseInt(conf.get("nav.maxAngularSpeed","100"));
+		minAngularSpeed		= Integer.parseInt(conf.get("nav.minAngularSpeed","50"));
+		angularAccelSpeed	= Double.parseDouble(conf.get("nav.angularAccepSpeed","0.1"));
+
+		conf.addConfigListener(this,"nav");
 	}
 
 	@Override
 	public void poseChanged(Pose p){
 		synchronized(this){
-			this.current = new Pose(p);
+			this.currentPose = new Pose(p);
 			this.notify();
 		}
 	}
 
 	@Override
-	public void run(){
+	public void configChanged(String key, String value){
+		if(key.equals("nav.stopDistance")){
+			stopDistance = Integer.parseInt(value);
+		}else if(key.equals("nav.fullStopDistance")){
+			fullStopDistance = Integer.parseInt(value);
+		}else if(key.equals("nav.maxLinearSpeed")){
+			maxLinearSpeed = Integer.parseInt(value);
+		}else if(key.equals("nav.minLinearSpeed")){
+			minLinearSpeed = Integer.parseInt(value);
+		}else if(key.equals("nav.linearAccepSpeed")){
+			linearAccelSpeed = Double.parseDouble(value);
+		}else if(key.equals("nav.stopAngle")){
+			stopAngle = Integer.parseInt(value);
+		}else if(key.equals("nav.fullStopAngle")){
+			fullStopAngle = Integer.parseInt(value);
+		}else if(key.equals("nav.maxAngularSpeed")){
+			maxAngularSpeed = Integer.parseInt(value);
+		}else if(key.equals("nav.minAngularSpeed")){
+			minAngularSpeed = Integer.parseInt(value);
+		}else if(key.equals("nav.angularAccepSpeed")){
+			angularAccelSpeed = Double.parseDouble(value);
+		}else{
+			//TODO Erreur
+		}
+	}
+
+	public void stopMoving(){
 		synchronized(this){
+			this.state = MovingAction.STOP;
+			this.accelState = MovingState.STOP;
+			this.notify();
+		}
+	}
+
+	public void moveForward(int distance){
+		synchronized(this){
+			this.state = MovingAction.FORWARD;
+			this.accelState = MovingState.ACCEL;
+			this.target = new Pose(this.currentPose);
+			this.target.move(distance);
+			this.prevTime = System.currentTimeMillis();
+			this.notify();
+		}
+	}
+
+	public void moveBackward(int distance){
+		synchronized(this){
+			this.state = MovingAction.BACKWARD;
+			this.accelState = MovingState.ACCEL;
+			this.target = new Pose(this.currentPose);
+			this.target.move(-distance);
+			this.prevTime = System.currentTimeMillis();
+			this.notify();
+		}
+	}
+
+	public void turnRight(int angle){
+		synchronized(this){
+			this.state = MovingAction.TURNRIGHT;
+			this.accelState = MovingState.ACCEL;
+			this.target = new Pose(this.currentPose);
+			this.target.setHeading(this.target.getHeading()+angle);
+			//TODO nb turn
+			this.prevTime = System.currentTimeMillis();
+			this.notify();
+		}
+	}
+
+	public void turnLeft(int angle){
+		synchronized(this){
+			this.state = MovingAction.TURNLEFT;
+			this.accelState = MovingState.ACCEL;
+			this.target = new Pose(this.currentPose);
+			this.target.setHeading(this.target.getHeading()-angle);
+			//TODO nb turn
+			this.prevTime = System.currentTimeMillis();
+			this.notify();
+		}
+	}
+
+	private void move(MovingAction direction, long diffTime, double distance, double angle){
+		int linearSpeed = 0;
+		int currentLinearSpeed = 0;
+		int angularSpeed = 0;
+
+		if(direction != MovingAction.FORWARD && direction != MovingAction.BACKWARD){
+			return;
+		}
+
+		if(distance <= this.stopDistance){
+			this.accelState = MovingState.DECEL;
+		}
+
+		currentLinearSpeed = Math.abs(this.asserv.getTargetLinearSpeed());
+
+		if(this.accelState == MovingState.ACCEL && currentLinearSpeed < this.maxLinearSpeed){
+			linearSpeed = currentLinearSpeed + (int)Math.round(diffTime*this.linearAccelSpeed);
+		}else if(this.accelState == MovingState.DECEL){
+			linearSpeed = currentLinearSpeed - (int)Math.round(diffTime*this.linearAccelSpeed);
+		}else{
+			linearSpeed = this.maxLinearSpeed;
+		}
+
+		//Limit maximum Speed
+		if(linearSpeed > this.maxLinearSpeed){
+			linearSpeed = this.maxLinearSpeed;
+		}
+		
+		//Limit minimum Speed
+		if(linearSpeed < this.minLinearSpeed){
+			linearSpeed = this.minLinearSpeed;
+		}
+
+		if(direction == MovingAction.BACKWARD){
+			linearSpeed *= -1;
+		}
+
+		//TODO Fix angle calcultation to keep the heading
+		//angularSpeed = (int)Math.round(angle);
+
+		this.asserv.lockLinear();
+		//this.asserv.lockAngular();
+		this.asserv.setTarget(linearSpeed,angularSpeed);
+
+		if(distance < this.fullStopDistance){
+			this.state = MovingAction.STOP;
+		}
+	}
+
+	private void turn(MovingAction direction, long diffTime, double distance, double angle){
+		int angularSpeed;
+		int currentAngularSpeed;
+		if(direction != MovingAction.TURNLEFT && direction != MovingAction.TURNRIGHT){
+			return;
+		}
+
+		if(angle <= this.stopAngle){
+		//	this.accelState = MovingState.DECEL;
+		}
+
+		currentAngularSpeed = Math.abs(this.asserv.getTargetAngularSpeed());
+
+		if(this.accelState == MovingState.ACCEL && currentAngularSpeed < this.maxAngularSpeed){
+			angularSpeed = currentAngularSpeed + (int)Math.round(diffTime*this.angularAccelSpeed);
+		}else if(this.accelState == MovingState.DECEL){
+			angularSpeed = currentAngularSpeed - (int)Math.round(diffTime*this.angularAccelSpeed);
+		}else{
+			angularSpeed = this.maxAngularSpeed;
+		}
+
+		//Limit maximum Speed
+		if(angularSpeed > this.maxAngularSpeed){
+			angularSpeed = this.maxAngularSpeed;
+		}
+		//Limit minumun Speed
+		if(angularSpeed < this.minAngularSpeed){
+			angularSpeed = this.minAngularSpeed;
+		}
+
+		if(direction == MovingAction.TURNLEFT){
+			angularSpeed *= -1;
+		}
+
+		this.asserv.lockAngular();
+		//TODO Fix distance calcultation to keep the position
+		//TODO Debug this.asserv.lockLinear();
+		this.asserv.setTarget(0,angularSpeed);
+
+		if(angle < this.fullStopAngle){
+	//		this.state = MovingAction.STOP;
+		}
+
+	}
+
+	@Override
+	public void run(){
+		double distance;
+		double angle;
+		long currentTime = System.currentTimeMillis();;
+		long diffTime = System.currentTimeMillis();;
+		while(!this.isInterrupted()){
 			try{
-				while(!this.isInterrupted()){
-					this.wait();
-					if(this.phase != 0){
-						this.calculation();
-						this.applySpeeds();
+				synchronized(this){
+					currentTime = System.currentTimeMillis();
+					diffTime = currentTime - this.prevTime;
+
+					angle = target.getHeading() - this.currentPose.getHeading();
+					distance = this.target.substract(this.currentPose).getDistance();
+
+					//System.out.println(distance);
+
+					if(this.state == MovingAction.FORWARD || this.state == MovingAction.BACKWARD){
+						this.move(this.state,diffTime,distance,angle);
+					}else if(this.state == MovingAction.TURNLEFT || this.state == MovingAction.TURNRIGHT){
+						this.turn(this.state,diffTime,distance,angle);
+					}else{
+						this.asserv.setTarget(0,0);
+						this.asserv.freeAngular();
+						this.asserv.freeLinear();
+						this.asserv.reset();
 					}
+					this.prevTime = currentTime;
+					this.wait();
 				}
 			}catch(InterruptedException e){
 				this.interrupt();
 			}
 		}
-	}
-
-	private void applySpeeds(){
-		this.asserv.setTarget(this.currentLinearSpeed,this.currentAngleSpeed);
-	}
-
-	private void reset(){
-		this.previousAngleSpeed = 0;
-		this.previousLinearSpeed = 0;
-		this.currentAngleSpeed = 0;
-		this.currentLinearSpeed = 0;
-		this.lastUpdate = -1;
-		this.applySpeeds();
-	}
-
-	private void calculation(){
-		long distance = 0;
-		int angle = 0;
-		if(this.phase == 1){
-			angle = (int)Math.round(current.getAngleTo(target));
-			if(angle == 0){
-				this.reset();
-				this.phase = 2;
-			}
-		}
-		if(this.phase == 2){
-			Pose error = target.substract(current);
-			distance = Math.round(error.getDistance());
-			if(distance == 0){
-				this.reset();
-				this.phase = 3;
-			}
-		}
-		if(this.phase == 3){
-			Pose error = target.substract(current);
-			angle = (int)Math.round(error.getHeading());
-			if(angle == 0){
-				this.reset();
-				this.phase = 0;
-			}
-		}
-		long currentTime = System.currentTimeMillis();
-		if(this.lastUpdate == -1){
-			this.previousAngleSpeed = 0;
-			this.previousLinearSpeed = 0;
-			if(angle != 0){
-				this.currentAngleSpeed = MIN_SPEED;
-				this.currentLinearSpeed = 0;
-			} else {
-				this.currentAngleSpeed = 0;
-				this.currentLinearSpeed = MIN_SPEED;
-			}
-		}else{
-			this.previousAngleSpeed = this.currentAngleSpeed;
-			this.previousLinearSpeed = this.currentLinearSpeed;
-			long diff = (currentTime - this.lastUpdate)/100;
-			this.currentAngleSpeed = 0;//TODO
-			this.currentLinearSpeed = 0;//TODO
-		}
-		this.lastUpdate = currentTime;
 	}
 }

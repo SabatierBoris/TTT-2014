@@ -81,8 +81,14 @@ public class Configurateur extends Thread implements MessageListener {
 	private void sendConfig(String key){
 		Enumeration<?> tmp = this.prop.propertyNames();
 		String k;
+		String sub;
 		while((k = (String)tmp.nextElement()) != null){
-			if(k.substring(0,key.length()).equals(key)){
+			if(k.length() > key.length()){
+				sub = k.substring(0,key.length());
+			}else{
+				sub = k;
+			}
+			if(sub.equals(key)){
 				this.conn.send(new GetConfig(k,this.prop.getProperty(k)));
 			}
 		}
@@ -99,8 +105,8 @@ public class Configurateur extends Thread implements MessageListener {
 					if(!this.queue.empty()){
 						m = (Message)this.queue.pop();
 						if(m.getId() == SetConfig.ID){
-						cf = (SetConfig)m;
-						this.set(cf.getKey(),cf.getValue());
+							cf = (SetConfig)m;
+							this.set(cf.getKey(),cf.getValue());
 						} else if(m.getId() == GetConfig.ID){
 							get = (GetConfig)m;
 							this.sendConfig(get.getKey());

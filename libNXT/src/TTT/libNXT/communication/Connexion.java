@@ -50,7 +50,6 @@ public class Connexion extends Thread{
 				if(this.isConnected()){
 					m = this.read();
 					if(m != null){
-						//System.out.println(m.toString());
 						this.fireMessageReceived(m);
 					}
 				} else if(!this.connect()){
@@ -68,13 +67,11 @@ public class Connexion extends Thread{
 
 	public synchronized boolean connect(){
 		try{
-			System.out.println("Wait");
 			this.connection = USB.waitForConnection();
 			if(!this.comm.connect(this.connection.openInputStream(),this.connection.openOutputStream())){
 				this.close();
 				return false;
 			}
-			System.out.println("Connect");
 			return true;
 		} catch(NullPointerException e){
 			this.close();
@@ -103,8 +100,6 @@ public class Connexion extends Thread{
 		if(this.isConnected()){
 			if(!this.comm.sendMessage(m)){
 				this.close();
-			} else {
-				//System.out.println(m.toString());
 			}
 		}
 	}

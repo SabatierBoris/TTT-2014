@@ -33,13 +33,13 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 	private int m2Speed;
 
 	private float lineP;
-	private int angleP;
+	private float angleP;
 
 	private float lineI;
-	private int angleI;
+	private float angleI;
 	
 	private float lineD;
-	private int angleD;
+	private float angleD;
 
 	private int previousLinearError;
 	private int previousAngularError;
@@ -71,9 +71,9 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		this.lineI = Float.parseFloat(conf.get("asserv.lineI","1"));
 		this.lineD = Float.parseFloat(conf.get("asserv.lineD","1"));
 
-		this.angleP = Integer.parseInt(conf.get("asserv.angleP","1"));
-		this.angleI = Integer.parseInt(conf.get("asserv.angleI","1"));
-		this.angleD = Integer.parseInt(conf.get("asserv.angleD","1"));
+		this.angleP = Float.parseFloat(conf.get("asserv.angleP","1"));
+		this.angleI = Float.parseFloat(conf.get("asserv.angleI","1"));
+		this.angleD = Float.parseFloat(conf.get("asserv.angleD","1"));
 
 		this.m1Speed = 0;
 		this.m2Speed = 0;
@@ -235,6 +235,7 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		this.sumAngularError += currentAngularError;
 		regulatedAngularError = Math.round((this.angleP * currentAngularError) + (this.angleI * this.sumAngularError) + (this.angleD * changeAngularError));
 		angularSpeed = regulatedAngularError;
+//		System.out.println(this.targetAngularSpeed + " - " + angularSpeed);
 
 //		this.conn.send(new Error(this.targetAngularSpeed + "    -     " + this.currentAngularSpeed + "    -   " + angularSpeed));
 
@@ -263,6 +264,10 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		
 		if((linearSpeed < 0 && this.targetLinearSpeed > 0) || (linearSpeed > 0 && this.targetLinearSpeed < 0)){
 			linearSpeed = this.targetLinearSpeed;
+		}
+
+		if((angularSpeed < 0 && this.targetAngularSpeed > 0) || (angularSpeed > 0 && this.targetAngularSpeed < 0)){
+			angularSpeed = this.targetAngularSpeed;
 		}
 
 		this.speedsUpdate(linearSpeed,angularSpeed);
@@ -297,11 +302,11 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		} else if(key.equals("asserv.lineD")){
 			this.lineD = Float.parseFloat(value);
 		} else if(key.equals("asserv.angleP")){
-			this.angleP = Integer.parseInt(value);
+			this.angleP = Float.parseFloat(value);
 		} else if(key.equals("asserv.angleI")){
-			this.angleI = Integer.parseInt(value);
+			this.angleI = Float.parseFloat(value);
 		} else if(key.equals("asserv.angleD")){
-			this.angleD = Integer.parseInt(value);
+			this.angleD = Float.parseFloat(value);
 		} else {
 			this.conn.send(new Error("Unknow " + key));
 		}
