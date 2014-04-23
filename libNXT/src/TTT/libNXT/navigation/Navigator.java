@@ -11,7 +11,9 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 	private MovingState accelState;
 
 	private Pose currentPose;
-	private Pose target;
+	private Pose prevPose;
+	private double distanceLeft;
+	private double angleLeft;
 
 	private AbstractAsservise asserv;
 
@@ -33,7 +35,9 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		this.asserv = asserv;
 		odo.addPoseListener(this);
 		this.currentPose = new Pose(odo.getCurrentPose());
-		this.target = new Pose(this.currentPose);
+		this.prevPose = new Pose(this.currentPose);
+		this.distanceLeft = 0;
+		this.angleLeft = 0;
 
 		Configurateur conf = Configurateur.getInstance();
 
@@ -55,6 +59,7 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 	@Override
 	public void poseChanged(Pose p){
 		synchronized(this){
+			this.prevPose = this.currentPose;
 			this.currentPose = new Pose(p);
 			this.notify();
 		}
@@ -99,8 +104,7 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		synchronized(this){
 			this.state = MovingAction.FORWARD;
 			this.accelState = MovingState.ACCEL;
-			this.target = new Pose(this.currentPose);
-			this.target.move(distance);
+			this.distanceLeft = distance;
 			this.prevTime = System.currentTimeMillis();
 			this.notify();
 		}
@@ -110,8 +114,7 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		synchronized(this){
 			this.state = MovingAction.BACKWARD;
 			this.accelState = MovingState.ACCEL;
-			this.target = new Pose(this.currentPose);
-			this.target.move(-distance);
+			this.distanceLeft = distance;
 			this.prevTime = System.currentTimeMillis();
 			this.notify();
 		}
@@ -121,9 +124,7 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		synchronized(this){
 			this.state = MovingAction.TURNRIGHT;
 			this.accelState = MovingState.ACCEL;
-			this.target = new Pose(this.currentPose);
-			this.target.setHeading(this.target.getHeading()+angle);
-			//TODO nb turn
+			this.angleLeft = angle;
 			this.prevTime = System.currentTimeMillis();
 			this.notify();
 		}
@@ -133,9 +134,7 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		synchronized(this){
 			this.state = MovingAction.TURNLEFT;
 			this.accelState = MovingState.ACCEL;
-			this.target = new Pose(this.currentPose);
-			this.target.setHeading(this.target.getHeading()-angle);
-			//TODO nb turn
+			this.angleLeft = angle;
 			this.prevTime = System.currentTimeMillis();
 			this.notify();
 		}
@@ -144,7 +143,6 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 	private void move(MovingAction direction, long diffTime, double distance, double angle){
 		int linearSpeed = 0;
 		int currentLinearSpeed = 0;
-		int angularSpeed = 0;
 
 		if(direction != MovingAction.FORWARD && direction != MovingAction.BACKWARD){
 			return;
@@ -178,12 +176,9 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 			linearSpeed *= -1;
 		}
 
-		//TODO Fix angle calcultation to keep the heading
-		//angularSpeed = (int)Math.round(angle);
-
+		this.asserv.lockAngular();
 		this.asserv.lockLinear();
-		//this.asserv.lockAngular();
-		this.asserv.setTarget(linearSpeed,angularSpeed);
+		this.asserv.setTarget(linearSpeed,0);
 
 		if(distance < this.fullStopDistance){
 			this.state = MovingAction.STOP;
@@ -198,7 +193,7 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		}
 
 		if(angle <= this.stopAngle){
-		//	this.accelState = MovingState.DECEL;
+			this.accelState = MovingState.DECEL;
 		}
 
 		currentAngularSpeed = Math.abs(this.asserv.getTargetAngularSpeed());
@@ -225,20 +220,17 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		}
 
 		this.asserv.lockAngular();
-		//TODO Fix distance calcultation to keep the position
-		//TODO Debug this.asserv.lockLinear();
+		this.asserv.lockLinear();
 		this.asserv.setTarget(0,angularSpeed);
 
 		if(angle < this.fullStopAngle){
-	//		this.state = MovingAction.STOP;
+			this.state = MovingAction.STOP;
 		}
 
 	}
 
 	@Override
 	public void run(){
-		double distance;
-		double angle;
 		long currentTime = System.currentTimeMillis();;
 		long diffTime = System.currentTimeMillis();;
 		while(!this.isInterrupted()){
@@ -247,16 +239,19 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 					currentTime = System.currentTimeMillis();
 					diffTime = currentTime - this.prevTime;
 
-					angle = target.getHeading() - this.currentPose.getHeading();
-					distance = this.target.substract(this.currentPose).getDistance();
+					this.angleLeft -= Math.abs(this.prevPose.getHeading() - this.currentPose.getHeading());
 
+
+					this.distanceLeft -= this.currentPose.substract(this.prevPose).getDistance();
 					//System.out.println(distance);
 
 					if(this.state == MovingAction.FORWARD || this.state == MovingAction.BACKWARD){
-						this.move(this.state,diffTime,distance,angle);
+						this.move(this.state,diffTime,this.distanceLeft,this.angleLeft);
 					}else if(this.state == MovingAction.TURNLEFT || this.state == MovingAction.TURNRIGHT){
-						this.turn(this.state,diffTime,distance,angle);
+						this.turn(this.state,diffTime,this.distanceLeft,this.angleLeft);
 					}else{
+						this.angleLeft = 0;
+						this.distanceLeft = 0;
 						this.asserv.setTarget(0,0);
 						this.asserv.freeAngular();
 						this.asserv.freeLinear();
