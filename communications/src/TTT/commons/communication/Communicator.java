@@ -10,22 +10,16 @@ import java.io.UnsupportedEncodingException;
 import java.io.IOException;
 
 public class Communicator {
-	private static Communicator instance = new Communicator();
-
 	private MessagesFactory facto;
 	private InputStreamReader rawIn;
 	private BufferedReader dataIn;
 	private BufferedWriter dataOut;
 
-	private Communicator(){
+	public Communicator(){
 		this.facto = new MessagesFactory();
 		this.rawIn = null;
 		this.dataIn = null;
 		this.dataOut = null;
-	}
-
-	public static Communicator getInstance(){
-		return instance;
 	}
 
 	public boolean isConnected(){

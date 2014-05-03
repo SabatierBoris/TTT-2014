@@ -34,7 +34,7 @@ public class ConnexionModel extends Thread{
 
 	public ConnexionModel(){
 		super();
-		this.comm = Communicator.getInstance();
+		this.comm = new Communicator();
 		this.connection = null;
 		this.listeners = new EventListenerList();
 		this.in = null;
