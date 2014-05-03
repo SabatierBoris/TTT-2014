@@ -92,9 +92,10 @@ public class ConnexionModel extends Thread{
 
 	public synchronized boolean connect(){
 		NXTInfo[] infos;
+		System.out.println("start connect");
 		try{
 			this.connection = NXTCommFactory.createNXTComm(NXTCommFactory.USB);
-			infos = this.connection.search("NXT");
+			infos = this.connection.search(null);
 			if(infos.length>=1){
 				this.connection.open(infos[0]);
 				this.in = this.connection.getInputStream();

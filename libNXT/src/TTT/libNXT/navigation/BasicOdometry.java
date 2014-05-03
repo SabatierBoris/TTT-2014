@@ -3,6 +3,7 @@ package TTT.libNXT.navigation;
 //TODO Remove
 import TTT.commons.communication.Error;
 import TTT.libNXT.communication.Connexion;
+import TTT.libNXT.communication.USBConnexion;
 
 import java.util.ArrayList;
 
@@ -60,7 +61,7 @@ public class BasicOdometry extends Thread implements ConfigListener {
 		this.poseListeners = new ArrayList<PoseListener>();
 
 		//TODO Remove
-		this.conn = Connexion.getInstance();
+		this.conn = USBConnexion.getInstance();
 
 		conf.addConfigListener(this,"odo");
 

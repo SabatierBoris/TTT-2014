@@ -35,10 +35,16 @@ public class Configurateur extends Thread implements MessageListener {
 		this.name = "default";
 		this.prop = new Properties();
 		this.load();
-		this.conn = Connexion.getInstance();
-		this.conn.addMessageListener(this,SetConfig.ID);
-		this.conn.addMessageListener(this,GetConfig.ID);
+		this.conn = null;
 		this.queue = new Queue<Message>();
+	}
+
+	public void setConn(Connexion conn){
+		this.conn = conn;
+		if(this.conn != null){
+			this.conn.addMessageListener(this,SetConfig.ID);
+			this.conn.addMessageListener(this,GetConfig.ID);
+		}
 	}
 
 	public void addConfigListener(ConfigListener listener, String key){
@@ -89,7 +95,9 @@ public class Configurateur extends Thread implements MessageListener {
 				sub = k;
 			}
 			if(sub.equals(key)){
-				this.conn.send(new GetConfig(k,this.prop.getProperty(k)));
+				if(this.conn != null){
+					this.conn.send(new GetConfig(k,this.prop.getProperty(k)));
+				}
 			}
 		}
 	}

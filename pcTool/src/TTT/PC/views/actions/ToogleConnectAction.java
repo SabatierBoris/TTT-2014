@@ -23,6 +23,7 @@ public class ToogleConnectAction extends AbstractAction implements ConnexionList
 		this.setName(false);
 	}
 	public void actionPerformed(ActionEvent e){
+		System.out.println("F5");
 		this.controller.toogleConnexion();
 	}
 

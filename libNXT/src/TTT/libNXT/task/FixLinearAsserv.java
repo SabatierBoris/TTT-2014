@@ -14,12 +14,12 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 	private FixAsservState state;
 	private int i;
 
-	public FixLinearAsserv(AbstractAsservise asserv){
+	public FixLinearAsserv(AbstractAsservise asserv, Connexion conn){
 		super();
 		this.i = 0;
 		this.state = FixAsservState.STOP;
 		this.asserv = asserv;
-		this.conn = Connexion.getInstance();
+		this.conn = conn;
 		this.conn.addMessageListener(this,FixLinearAsservMessage.ID);
 	}
 

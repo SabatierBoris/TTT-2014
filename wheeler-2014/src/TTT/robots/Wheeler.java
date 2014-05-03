@@ -4,85 +4,104 @@ import TTT.commons.navigation.Pose;
 
 import lejos.robotics.navigation.DifferentialPilot;
 import lejos.nxt.Motor;
+import lejos.nxt.NXTMotor;
 
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Button;
 import lejos.nxt.TouchSensor;
+import lejos.robotics.Touch;
 
 import TTT.libNXT.sensor.MindSensorAngle;
 import TTT.libNXT.sensor.MindSensorCompass;
 
 import TTT.robots.actions.Arm;
 
-import TTT.libNXT.communication.Connexion;
-import TTT.libNXT.task.PingResponse;
 import TTT.libNXT.robot.Robot;
+
+import TTT.libNXT.communication.Connexion;
+
 import TTT.libNXT.navigation.BasicOdometry;
+import TTT.libNXT.navigation.DifferentialAsservise;
 import TTT.libNXT.navigation.Navigator;
+
+import TTT.libNXT.configuration.Configurateur;
+
+import TTT.libNXT.task.PingResponse;
+import TTT.libNXT.task.FixLinearAsserv;
+import TTT.libNXT.task.FixAngularAsserv;
+import TTT.libNXT.task.SendAsservInfo;
+
+import TTT.libNXT.actuator.MirrorNXTMotor;
 
 import lejos.nxt.addon.CompassMindSensor;
 
 public class Wheeler extends Robot {
 
 	private BasicOdometry odo;
+	private Configurateur conf;
+	private Touch starter;
 
 	public Wheeler(){
-		super(new TouchSensor(SensorPort.S3));
-		this.odo = new BasicOdometry(new MindSensorAngle(SensorPort.S1), 1,
-									 new MindSensorAngle(SensorPort.S2), -1, 22.92f, 62.83f);
-		DifferentialAsservise asserv = new DifferentialAsservise(this.odo, Motor.A, Motor.B,
-																 1,0,0,1,0,0);
-		//Navigator nav = new Navigator(this.odo,asserv);
+		super(90000l);
+		this.starter = new TouchSensor(SensorPort.S3);
+
+		this.conf = Configurateur.getInstance();
+		this.conf.setName("Wheeler");
+
+		this.odo = new BasicOdometry(new MindSensorAngle(SensorPort.S1), new MindSensorAngle(SensorPort.S2));
+		DifferentialAsservise asserv = new DifferentialAsservise(this.odo, new MirrorNXTMotor(MotorPort.A),new NXTMotor(MotorPort.B));
+		Navigator nav = new Navigator(this.odo,asserv);
+
+		this.addTask(this.conf);
 		this.addTask(Connexion.getInstance());
+
 		this.addTask(this.odo);
 		this.addTask(asserv);
+		this.addTask(nav);
+
+		this.addTask(new FixLinearAsserv(asserv));
+		this.addTask(new FixAngularAsserv(asserv));
+		this.addTask(new SendAsservInfo(asserv));
+
+		//this.addTask(new TaskTest2(this.odo,asserv));
+		this.addTask(new TaskTest3(nav));
+
+		//this.addTask(new TaskTest1(this.odo,Motor.A,Motor.B));
+//		this.addTask(new TaskTest1(this.odo,new NXTMotor(MotorPort.A),new NXTMotor(MotorPort.B)));
+
 		//this.addTask(nav);
-		//this.addTask(new TaskTest(nav));
-		this.addTask(new TaskTest1(this.odo,asserv));
+//		this.addTask(new TaskTest(this.odo,asserv));
+//		this.addTask(new TaskTest1(this.odo,asserv));
 //		this.addTask(new SendPose(this.odo));
+	}
+
+	@Override
+	public void insertStarter(){
+		System.out.println("INSERT STARTER");
+		while(!this.starter.isPressed()){
+			Thread.yield();
+		}
+	}
+
+	@Override
+	public void removeStarter(){
+		System.out.println("REMOVE STARTER");
+		while(this.starter.isPressed()){
+			Thread.yield();
+		}
+	}
+
+	@Override
+	public boolean ARUIsPress(){
+		return this.starter.isPressed();
 	}
 
 
 	public static void main(String[] args){
 		Wheeler bot = new Wheeler();
 		bot.run();
-		/* Test compass
-		MindSensorCompass c = new MindSensorCompass(SensorPort.S3);
-		int i = 0;
-		while(i<40){
-			i++;
-			System.out.println(c.getDegreesCartesian());
-//			System.out.println(c.getX());
-//			System.out.println(c.getY());
-//			System.out.println(c.getZ());
-			try{
-				Thread.sleep(1000);
-			} catch(Exception e){
-			}
-		}
-		*/
-		/* Test Arm
-		Arm a = new Arm(new NXTRegulatedMotor(MotorPort.A));
-		System.out.println("Init");
-		a.init();
-		Button.waitForAnyPress();
-		*/
-
-//		Connexion conn = Connexion.getInstance();
-//		conn.setDaemon(true);
-//		conn.start();
-
-//		TaskTest t = new TaskTest();
-//		PingResponse p = new PingResponse();
-//		p.setDaemon(true);
-//		p.start();
-//		t.setDaemon(true);
-//		t.start();
-//		Button.waitForAnyPress();
-//		p.interrupt();
-//		t.interrupt();
-//		conn.interrupt();
+		Configurateur.getInstance().save();//TODO improve
 	}
 }

@@ -176,7 +176,6 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 			linearSpeed *= -1;
 		}
 
-		this.asserv.lockAngular();
 		this.asserv.lockLinear();
 		this.asserv.setTarget(linearSpeed,0);
 
@@ -220,7 +219,6 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		}
 
 		this.asserv.lockAngular();
-		this.asserv.lockLinear();
 		this.asserv.setTarget(0,angularSpeed);
 
 		if(angle < this.fullStopAngle){

@@ -4,22 +4,19 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-import lejos.nxt.comm.USB;
 import lejos.nxt.comm.NXTConnection;
 
 import TTT.commons.communication.Communicator;
 import TTT.commons.communication.Message;
 import TTT.commons.communication.MessageListener;
 
-public class Connexion extends Thread{
-	private static Connexion instance = new Connexion();
-
+public abstract class Connexion extends Thread{
 	private final Hashtable<Integer,Collection<MessageListener>> messageListeners = new Hashtable<Integer,Collection<MessageListener>>();
 
 	private Communicator comm;
 	private NXTConnection connection;
 
-	private Connexion(){
+	public Connexion(){
 		super();
 		this.comm = new Communicator();
 		this.connection = null;
@@ -65,19 +62,19 @@ public class Connexion extends Thread{
 		return (this.comm.isConnected() && this.connection != null);
 	}
 
-	public synchronized boolean connect(){
-		try{
-			this.connection = USB.waitForConnection();
+	public boolean setConnection(NXTConnection connection){
+		this.connection = connection;
+		if(this.connection != null){
 			if(!this.comm.connect(this.connection.openInputStream(),this.connection.openOutputStream())){
 				this.close();
 				return false;
 			}
 			return true;
-		} catch(NullPointerException e){
-			this.close();
-			return false;
 		}
+		return false;
 	}
+
+	abstract public boolean connect();
 
 	public void close(){
 		this.comm.close();
@@ -85,10 +82,6 @@ public class Connexion extends Thread{
 			this.connection.close();
 			this.connection = null;
 		}
-	}
-
-	public static Connexion getInstance(){
-		return instance;
 	}
 
 	public Message read(){

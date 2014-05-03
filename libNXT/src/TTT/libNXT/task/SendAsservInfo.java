@@ -12,10 +12,10 @@ public class SendAsservInfo extends Thread implements MessageListener{
 	private AbstractAsservise asserv;
 	private Connexion conn;
 
-	public SendAsservInfo(AbstractAsservise asserv){
+	public SendAsservInfo(AbstractAsservise asserv, Connexion conn){
 		super();
 		this.asserv = asserv;
-		this.conn = Connexion.getInstance();
+		this.conn = conn;
 		this.conn.addMessageListener(this,AsservInfo.ID);
 	}
 

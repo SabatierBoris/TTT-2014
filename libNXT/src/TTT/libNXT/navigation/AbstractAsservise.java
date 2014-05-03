@@ -3,6 +3,7 @@ package TTT.libNXT.navigation;
 //TODO Remove
 import TTT.commons.communication.Error;
 import TTT.libNXT.communication.Connexion;
+import TTT.libNXT.communication.USBConnexion;
 
 import TTT.libNXT.configuration.Configurateur;
 import TTT.libNXT.configuration.ConfigListener;
@@ -96,7 +97,7 @@ public abstract class AbstractAsservise extends Thread implements CodeursListene
 		this.lastUpdateTick = System.currentTimeMillis();
 
 		//TODO Remove
-		this.conn = Connexion.getInstance();
+		this.conn = USBConnexion.getInstance();
 
 
 		odo.addCodeursListener(this);

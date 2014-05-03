@@ -10,17 +10,24 @@ public class DifferentialAsservise extends AbstractAsservise{
 
 	@Override 
 	protected void speedsUpdate(int linearSpeed, int angularSpeed){
-		if(this.linearIsLock()){
+		if(this.linearIsLock() || this.angularIsLock()){
 			this.setM1Float(false);
-			this.setM1Speed(linearSpeed);
-		} else {
+			this.setM2Float(false);
+		}else{
 			this.setM1Float(true);
+			this.setM2Float(true);
+		}
+
+
+		if(this.linearIsLock()){
+			this.setM1Speed(linearSpeed);
+		}else{
+			this.setM1Speed(0);
 		}
 		if(this.angularIsLock()){
-			this.setM2Float(false);
 			this.setM2Speed(-1*angularSpeed);
-		} else {
-			this.setM2Float(true);
+		}else{
+			this.setM2Speed(0);
 		}
 	}
 }
