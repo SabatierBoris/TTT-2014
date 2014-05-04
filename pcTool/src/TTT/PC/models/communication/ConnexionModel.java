@@ -156,6 +156,7 @@ public class ConnexionModel extends Thread{
 
 	public Message read(){
 		Message in = this.comm.readMessage();
+		System.out.println("<- " + in);
 		return in;
 	}
 
@@ -164,7 +165,7 @@ public class ConnexionModel extends Thread{
 			if(!this.comm.sendMessage(m)){
 				this.close();
 			} else {
-//				System.out.println(m);
+				System.out.println("->" + m);
 			}
 		}
 	}

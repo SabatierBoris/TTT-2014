@@ -86,11 +86,13 @@ public abstract class Connexion extends Thread{
 
 	public Message read(){
 		Message in = this.comm.readMessage();
+//		System.out.println("<- " + in);
 		return in;
 	}
 
 	public synchronized void send(Message m){
 		if(this.isConnected()){
+//			System.out.println("-> " + m);
 			if(!this.comm.sendMessage(m)){
 				this.close();
 			}

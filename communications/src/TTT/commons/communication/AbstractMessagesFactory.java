@@ -11,6 +11,9 @@ public abstract class AbstractMessagesFactory extends AbstractFactory{
 	}
 
 	public Message getMessage(String data) throws ParsingFailException {
+		if(data == null || data.length() == 0){
+			return null;
+		}
 		int type;
 		String buff;
 		Message mes;

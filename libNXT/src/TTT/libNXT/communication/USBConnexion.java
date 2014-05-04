@@ -12,7 +12,7 @@ public class USBConnexion extends Connexion{
 	@Override
 	public synchronized boolean connect(){
 		try{
-			if(this.setConnection(USB.waitForConnection())){
+			if(!this.setConnection(USB.waitForConnection())){
 				this.close();
 				return false;
 			}
