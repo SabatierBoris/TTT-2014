@@ -22,6 +22,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 			case SetConfig.ID:
 				ret = new SetConfig();
 				break;
+			case SendPoseMsg.ID:
+				ret = new SendPoseMsg();
+				break;
 			case Ping.ID:
 				ret = new Ping();
 				break;
@@ -45,6 +48,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 				break;
 			case GetConfig.ID:
 				ret = new GetConfig();
+				break;
+			case GetPose.ID:
+				ret = new GetPose();
 				break;
 		}
 		return ret;
