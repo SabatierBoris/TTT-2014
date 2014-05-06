@@ -148,6 +148,11 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 			return;
 		}
 
+		if(distance < this.fullStopDistance){
+			this.state = MovingAction.STOP;
+			return;
+		}
+
 		if(distance <= this.stopDistance){
 			this.accelState = MovingState.DECEL;
 		}
@@ -163,14 +168,10 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		}
 
 		//Limit maximum Speed
-		if(linearSpeed > this.maxLinearSpeed){
-			linearSpeed = this.maxLinearSpeed;
-		}
+		linearSpeed = Math.min(linearSpeed,this.maxLinearSpeed);
 		
 		//Limit minimum Speed
-		if(linearSpeed < this.minLinearSpeed){
-			linearSpeed = this.minLinearSpeed;
-		}
+		linearSpeed = Math.max(linearSpeed,this.minLinearSpeed);
 
 		if(direction == MovingAction.BACKWARD){
 			linearSpeed *= -1;
@@ -179,15 +180,17 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		this.asserv.lockLinear();
 		this.asserv.setTarget(linearSpeed,0);
 
-		if(distance < this.fullStopDistance){
-			this.state = MovingAction.STOP;
-		}
 	}
 
 	private void turn(MovingAction direction, long diffTime, double distance, double angle){
 		int angularSpeed;
 		int currentAngularSpeed;
+
 		if(direction != MovingAction.TURNLEFT && direction != MovingAction.TURNRIGHT){
+			return;
+		}
+		if(angle < this.fullStopAngle){
+			this.state = MovingAction.STOP;
 			return;
 		}
 
@@ -206,13 +209,10 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 		}
 
 		//Limit maximum Speed
-		if(angularSpeed > this.maxAngularSpeed){
-			angularSpeed = this.maxAngularSpeed;
-		}
+		angularSpeed = Math.min(angularSpeed,this.maxAngularSpeed);
+
 		//Limit minumun Speed
-		if(angularSpeed < this.minAngularSpeed){
-			angularSpeed = this.minAngularSpeed;
-		}
+		angularSpeed = Math.max(angularSpeed,this.minAngularSpeed);
 
 		if(direction == MovingAction.TURNLEFT){
 			angularSpeed *= -1;
@@ -220,11 +220,6 @@ public class Navigator extends Thread implements PoseListener, ConfigListener {
 
 		this.asserv.lockAngular();
 		this.asserv.setTarget(0,angularSpeed);
-
-		if(angle < this.fullStopAngle){
-			this.state = MovingAction.STOP;
-		}
-
 	}
 
 	@Override
