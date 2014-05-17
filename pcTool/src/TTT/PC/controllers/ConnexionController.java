@@ -7,7 +7,13 @@ import TTT.commons.communication.AsservInfo;
 import TTT.commons.communication.Battery;
 import TTT.commons.communication.FixLinearAsservMessage;
 import TTT.commons.communication.FixAngularAsservMessage;
+import TTT.commons.communication.MoveMsg;
+import TTT.commons.communication.TurnMsg;
+import TTT.commons.communication.StopMsg;
+import TTT.commons.communication.SetPoseMsg;
 import TTT.commons.communication.MessageListener;
+
+import TTT.commons.navigation.Pose;
 
 public class ConnexionController {
 	private ConnexionModel model = null;
@@ -50,5 +56,21 @@ public class ConnexionController {
 
 	public void sendBattery(){
 		this.model.send(new Battery());
+	}
+
+	public void sendMove(int distance){
+		this.model.send(new MoveMsg(distance));
+	}
+
+	public void sendTurn(int angle){
+		this.model.send(new TurnMsg(angle));
+	}
+
+	public void sendStop(){
+		this.model.send(new StopMsg());
+	}
+
+	public void setCurrentPose(Pose pose){
+		this.model.send(new SetPoseMsg(pose));
 	}
 }

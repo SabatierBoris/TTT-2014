@@ -14,17 +14,21 @@ import javax.swing.JScrollPane;
 import TTT.PC.models.communication.ConnexionModel;
 import TTT.PC.models.config.ConfigModel;
 import TTT.PC.models.graph.GraphModel;
+import TTT.PC.models.odometry.OdometryModel;
 
 import TTT.PC.models.task.TaskAsservInfo;
+import TTT.PC.models.task.TaskGetPose;
 
 import TTT.PC.controllers.ConnexionController;
 import TTT.PC.controllers.ConfigController;
 import TTT.PC.controllers.AsservController;
+import TTT.PC.controllers.OdometryController;
 
 import TTT.PC.views.actions.QuitAction;
 import TTT.PC.views.actions.ToogleConnectAction;
-import TTT.PC.views.actions.FixLinearAsservAction;
-import TTT.PC.views.actions.FixAngularAsservAction;
+//import TTT.PC.views.actions.FixLinearAsservAction;
+//import TTT.PC.views.actions.FixAngularAsservAction;
+import TTT.PC.views.actions.FixOdometry;
 import TTT.PC.views.actions.BatteryAction;
 
 public class MainView extends JFrame {
@@ -40,19 +44,24 @@ public class MainView extends JFrame {
 		connModel.setDaemon(true);
 		connModel.start();
 
-
 		ConfigModel confModel = new ConfigModel(connModel);
 
 		GraphModel linearGraphModel = new GraphModel();
 		GraphModel angularGraphModel = new GraphModel();
+		OdometryModel odoModel = new OdometryModel();
 
 		TaskAsservInfo asservInfo = new TaskAsservInfo(connModel,linearGraphModel,angularGraphModel);
 		asservInfo.setDaemon(true);
 		asservInfo.start();
 
+		TaskGetPose getPose = new TaskGetPose(connModel,odoModel);
+		getPose.setDaemon(true);
+		getPose.start();
+
 		ConnexionController connControl = new ConnexionController(connModel);
 		ConfigController confControl = new ConfigController(confModel);
 		AsservController asservControl = new AsservController(confControl,connControl,linearGraphModel,angularGraphModel,asservInfo);
+		OdometryController odoControl = new OdometryController(odoModel,confControl,connControl,getPose);
 
 		ConnexionViewStatusBar statusBar = new ConnexionViewStatusBar(connControl);
 		JTable configTable = new JTable(new ConfigTableModel(connControl,confControl));
@@ -100,8 +109,9 @@ public class MainView extends JFrame {
 		JMenu menu1 = new JMenu("File");
 
 		menu1.add(new JMenuItem(new ToogleConnectAction(connControl)));
-		menu1.add(new JMenuItem(new FixLinearAsservAction(asservControl)));
-		menu1.add(new JMenuItem(new FixAngularAsservAction(connControl)));
+//		menu1.add(new JMenuItem(new FixLinearAsservAction(asservControl)));
+//		menu1.add(new JMenuItem(new FixAngularAsservAction(connControl)));
+		menu1.add(new JMenuItem(new FixOdometry(odoControl)));
 		menu1.add(new JMenuItem(new BatteryAction(connControl,asservInfo,linearGraphModel,angularGraphModel)));
 		menu1.add(new JMenuItem(new QuitAction("Quit")));
 		menuBar.add(menu1);

@@ -22,6 +22,7 @@ import lejos.pc.comm.NXTInfo;
 
 import TTT.commons.communication.Communicator;
 import TTT.commons.communication.Message;
+import TTT.commons.communication.Error;
 import TTT.commons.communication.MessageListener;
 
 public class ConnexionModel extends Thread{
@@ -92,7 +93,6 @@ public class ConnexionModel extends Thread{
 
 	public synchronized boolean connect(){
 		NXTInfo[] infos;
-		System.out.println("start connect");
 		try{
 			this.connection = NXTCommFactory.createNXTComm(NXTCommFactory.USB);
 			infos = this.connection.search(null);
@@ -156,7 +156,9 @@ public class ConnexionModel extends Thread{
 
 	public Message read(){
 		Message in = this.comm.readMessage();
-		System.out.println("<- " + in);
+		if(in.getId() == Error.ID){
+			System.out.println("<- " + in);
+		}
 		return in;
 	}
 
@@ -165,7 +167,7 @@ public class ConnexionModel extends Thread{
 			if(!this.comm.sendMessage(m)){
 				this.close();
 			} else {
-				System.out.println("->" + m);
+	//			System.out.println("->" + m);
 			}
 		}
 	}
