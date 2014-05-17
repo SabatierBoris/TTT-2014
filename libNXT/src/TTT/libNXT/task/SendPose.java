@@ -6,6 +6,7 @@ import TTT.libNXT.communication.Connexion;
 
 import TTT.commons.communication.Message;
 import TTT.commons.communication.SendPoseMsg;
+import TTT.commons.communication.Error;//TODO
 import TTT.commons.communication.GetPose;
 import TTT.commons.communication.MessageListener;
 import TTT.commons.navigation.Pose;

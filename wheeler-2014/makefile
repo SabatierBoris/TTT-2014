@@ -40,13 +40,13 @@ $(LIBNXT_TARGET):
 	@$(MAKE) -s -C $(LIBNXT_DIR) SPACE="$(SPACE) - "
 
 run: all
-	@$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
+	$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
 
 $(TARGET): $(CLASS) $(LIBNXT_TARGET)
 
 %.nxj:
 	@echo "$(SPACE)Building $(shell basename $@)"
-	$(LINK) $(LINKFLAGS) -o $@ $(MAIN_CLASS)
+	$(LINK) $(LINKFLAGS) -o $@ -od ExceptionAnalyse.nxd $(MAIN_CLASS)
 
 $(TARGET_DIR)/%.class: $(SRC_DIR)/%.java
 	@echo "$(SPACE)Compiling $(shell basename $^)" 

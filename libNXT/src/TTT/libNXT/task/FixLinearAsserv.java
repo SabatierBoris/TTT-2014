@@ -30,11 +30,11 @@ public class FixLinearAsserv extends Thread implements MessageListener{
 				while(!this.isInterrupted()){
 					if(this.state == FixAsservState.FORWARD){
 						this.asserv.reset();
-						this.asserv.setTarget(20,0);
+						this.asserv.setTarget(100,0);
 						this.asserv.lockLinear();
 					}else if(this.state == FixAsservState.BACKWARD){
 						this.asserv.reset();
-						this.asserv.setTarget(-20,0);
+						this.asserv.setTarget(-100,0);
 						this.asserv.lockLinear();
 					}else{
 						this.asserv.freeLinear();

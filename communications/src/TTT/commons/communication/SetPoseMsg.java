@@ -7,16 +7,16 @@ import TTT.commons.factory.ItemFactory;
 import TTT.commons.navigation.Pose;
 
 @ItemFactory(factoryName="TTT.commons.communication.Messages")
-public class SendPoseMsg extends Message {
+public class SetPoseMsg extends Message {
 	public static final String DELIMITER = ":";
-	public static final int ID = 14;
+	public static final int ID = 18;
 	private Pose data;
 
-	public SendPoseMsg(){
+	public SetPoseMsg(){
 		this(new Pose());
 	}
 
-	public SendPoseMsg(Pose data){
+	public SetPoseMsg(Pose data){
 		this.data = data;
 	}
 
@@ -29,7 +29,7 @@ public class SendPoseMsg extends Message {
 		if(this.data == null){
 			this.data = new Pose();
 		}
-		return ID + Message.DELIMITER + this.data.getLocation().getX() + SendPoseMsg.DELIMITER + this.data.getLocation().getY() + SendPoseMsg.DELIMITER + this.data.getFullHeading();
+		return ID + Message.DELIMITER + this.data.getLocation().getX() + SetPoseMsg.DELIMITER + this.data.getLocation().getY() + SetPoseMsg.DELIMITER + this.data.getHeading();
 	}
 
 	@Override
@@ -48,7 +48,6 @@ public class SendPoseMsg extends Message {
 
 	@Override
 	public int getId(){
-		return SendPoseMsg.ID;
+		return SetPoseMsg.ID;
 	}
 }
-

@@ -42,11 +42,15 @@ $(LIBNXT_TARGET):
 run: all
 	@$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
 
+debug:
+	@echo "$(SPACE)DEBUGING Information : ";
+	@read buff; nxjdebugtool -di ExceptionAnalyse.nxd -c -m $${buff}
+
 $(TARGET): $(CLASS) $(LIBNXT_TARGET)
 
 %.nxj:
 	@echo "$(SPACE)Building $(shell basename $@)"
-	$(LINK) $(LINKFLAGS) -o $@ $(MAIN_CLASS)
+	$(LINK) $(LINKFLAGS) -o $@ -od ExceptionAnalyse.nxd $(MAIN_CLASS)
 
 $(TARGET_DIR)/%.class: $(SRC_DIR)/%.java
 	@echo "$(SPACE)Compiling $(shell basename $^)" 

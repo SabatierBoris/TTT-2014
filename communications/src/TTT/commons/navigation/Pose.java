@@ -3,6 +3,8 @@ package TTT.commons.navigation;
 public class Pose {
 	private Point location;
 	private double heading;
+	private long nbTurn;
+	private double fullHeading;
 
 	public Pose(double x, double y, double heading){
 		this.location = new Point(x,y);
@@ -14,7 +16,7 @@ public class Pose {
 	}
 
 	public Pose(Pose p){
-		this(p.location,p.heading);
+		this(p.location,p.fullHeading);
 	}
 
 	public Pose(Point p){
@@ -37,6 +39,10 @@ public class Pose {
 		return this.heading;
 	}
 
+	public double getFullHeading(){
+		return this.fullHeading;
+	}
+
 	public void setLocation(Point p){
 		this.setLocation(p.getX(), p.getY());
 	}
@@ -46,12 +52,10 @@ public class Pose {
 		this.location.setY(y);
 	}
 
-	public void setHeading(double heading){
-		heading %= 360;
-		if(heading < 0){
-			heading += 360;
-		}
-		this.heading = heading;
+	public void setHeading(double data){
+		this.fullHeading = data;
+		this.nbTurn = Math.round(data)/360;
+		this.heading = data%360;
 	}
 
 	public void move(float distance, double newHeading){
@@ -65,24 +69,28 @@ public class Pose {
 			double newY = this.location.getY();
 			double dx = 0;
 			double dy = 0;
-			if(this.heading == 0){
-				dx = 0;
-				dy = distance;
-			} else if(this.heading == 90){
+			double head = this.heading;
+			if(head < 0){
+				head+=360;
+			}
+			if(head == 0){
 				dx = distance;
 				dy = 0;
-			} else if(this.heading == 180){
+			} else if(head == 90){
 				dx = 0;
-				dy = -distance;
-			} else if(this.heading == 270){
+				dy = distance;
+			} else if(head == 180){
 				dx = -distance;
 				dy = 0;
+			} else if(head == 270){
+				dx = 0;
+				dy = -distance;
 			} else {
-				double radian = Math.toRadians(this.heading);
+				double radian = Math.toRadians(head);
 				double cos = Math.cos(radian);
 				double sin = Math.sin(radian);
-				dx = distance*sin;
-				dy = distance*cos;
+				dx = distance*cos;
+				dy = distance*sin;
 			}
 			newX += dx;
 			newY += dy;
@@ -103,7 +111,7 @@ public class Pose {
 	}
 
 	public String toString(){
-		return this.location.toString() + "," + this.heading;
+		return this.location.toString() + "," + this.heading + "(" + this.fullHeading + ")";
 	}
 
 	public double getAngleTo(Pose p){

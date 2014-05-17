@@ -70,11 +70,11 @@ public class Configurateur extends Thread implements MessageListener {
 	}
 
 	private void fireConfigChanged(String key, String value){
-		if(this.configListeners != null){
+		if(this.configListeners != null && key != null){
 			Enumeration<String> tmp = this.configListeners.keys();
 			String k;
 			while((k = tmp.nextElement()) != null){
-				if(k.equals(key.substring(0,k.length()))){
+				if(k.equals(key.substring(0,Math.min(k.length(),key.length())))){
 					Collection<ConfigListener> listeners = this.configListeners.get(k);
 					for(ConfigListener listener : listeners){
 						listener.configChanged(key,value);

@@ -30,7 +30,7 @@ public class TankAsservise extends AbstractAsservise{
 			this.setM1Float(true);
 			this.setM2Float(true);
 		}
-		this.setM1Speed(linearSpeed+angularSpeed);
-		this.setM2Speed(linearSpeed-angularSpeed);
+		this.setM1Speed(M1Speed);
+		this.setM2Speed(M2Speed);
 	}
 }

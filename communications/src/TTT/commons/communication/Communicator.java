@@ -63,11 +63,17 @@ public class Communicator {
 	}
 
 	public boolean sendMessage(Message msg){
+		if(msg == null){
+			return false;
+		}
 		try{
 			this.dataOut.write(msg.toString());
 			this.dataOut.newLine();
 			this.dataOut.flush();
 		} catch(IOException e){
+			this.close();
+			return false;
+		} catch(NullPointerException e){
 			this.close();
 			return false;
 		}
@@ -90,11 +96,11 @@ public class Communicator {
 		} catch(IOException e){
 			in = null;
 		} catch(NullPointerException e){
-			this.close();
-			return null;
+			in = null;
 		} catch(OutOfMemoryError e){
-			this.close();
-			return null;
+			in = null;
+		} catch(NoSuchMethodError e){
+			in = null;
 		}
 		if(in == null){
 			this.close();

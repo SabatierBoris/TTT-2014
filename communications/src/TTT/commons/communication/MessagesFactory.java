@@ -25,6 +25,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 			case SendPoseMsg.ID:
 				ret = new SendPoseMsg();
 				break;
+			case MoveMsg.ID:
+				ret = new MoveMsg();
+				break;
 			case Ping.ID:
 				ret = new Ping();
 				break;
@@ -33,6 +36,12 @@ public class MessagesFactory extends AbstractMessagesFactory {
 				break;
 			case Error.ID:
 				ret = new Error();
+				break;
+			case StopMsg.ID:
+				ret = new StopMsg();
+				break;
+			case SetPoseMsg.ID:
+				ret = new SetPoseMsg();
 				break;
 			case AsservInfo.ID:
 				ret = new AsservInfo();
@@ -51,6 +60,9 @@ public class MessagesFactory extends AbstractMessagesFactory {
 				break;
 			case GetPose.ID:
 				ret = new GetPose();
+				break;
+			case TurnMsg.ID:
+				ret = new TurnMsg();
 				break;
 		}
 		return ret;

@@ -2,8 +2,10 @@ package TTT.libNXT.navigation;
 
 //TODO Remove
 import TTT.commons.communication.Error;
+import TTT.commons.communication.Message;
+import TTT.commons.communication.SetPoseMsg;
+import TTT.commons.communication.MessageListener;
 import TTT.libNXT.communication.Connexion;
-import TTT.libNXT.communication.USBConnexion;
 
 import java.util.ArrayList;
 
@@ -15,7 +17,8 @@ import TTT.commons.navigation.PoseListener;
 import TTT.libNXT.configuration.Configurateur;
 import TTT.libNXT.configuration.ConfigListener;
 
-public class BasicOdometry extends Thread implements ConfigListener {
+
+public class BasicOdometry extends Thread implements ConfigListener, MessageListener {
 	private Pose currentPosition;
 
 	private Tachometer leftSensor;
@@ -41,7 +44,7 @@ public class BasicOdometry extends Thread implements ConfigListener {
 	//TODO Remove
 	private Connexion conn;
 
-	public BasicOdometry(Tachometer left, Tachometer right){
+	public BasicOdometry(Tachometer left, Tachometer right, Connexion conn){
 		this.leftSensor = left;
 		this.rightSensor = right;
 
@@ -60,12 +63,22 @@ public class BasicOdometry extends Thread implements ConfigListener {
 		this.codeursListeners = new ArrayList<CodeursListener>();
 		this.poseListeners = new ArrayList<PoseListener>();
 
+		conn.addMessageListener(this,SetPoseMsg.ID);
+
 		//TODO Remove
-		this.conn = USBConnexion.getInstance();
+		this.conn = conn;
 
 		conf.addConfigListener(this,"odo");
 
 		this.initTachos();
+	}
+
+	public float getCoefH(){
+		return this.COEF_H;
+	}
+	
+	public float getCoefD(){
+		return this.COEF_D;
 	}
 
 	private void initTachos(){
@@ -115,10 +128,7 @@ public class BasicOdometry extends Thread implements ConfigListener {
 			int delta_distance = this.distance - prevDistance;
 			int delta_orient = (this.orient + prevOrient)/2;
 
-//			this.conn.send(new Error("Delta-O " + delta_orient/this.COEF_H));
-
 			newPose.move(delta_distance/this.COEF_D,delta_orient/this.COEF_H);
-			//newPose.move(delta_distance/COEF_D);
 
 			tmpPose = this.getCurrentPose();
 			// If a new position is set by someone else during the calculation, we ignore the calculation
@@ -162,6 +172,9 @@ public class BasicOdometry extends Thread implements ConfigListener {
 
 	public synchronized void setCurrentPose(Pose p){
 		this.currentPosition = new Pose(p);
+		if(p.getHeading() == 0){
+			this.initTachos();
+		}
 		this.firePoseChanged(p);
 	}
 
@@ -195,6 +208,13 @@ public class BasicOdometry extends Thread implements ConfigListener {
 			this.sleepTime = Integer.parseInt(value);
 		} else {
 			this.conn.send(new Error("Unknow " + key));
+		}
+	}
+
+	@Override
+	public void messageReceived(Message m){
+		if(m.getId() == SetPoseMsg.ID){
+			this.setCurrentPose(((SetPoseMsg)m).getPose());
 		}
 	}
 }
