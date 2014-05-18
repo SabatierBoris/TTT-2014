@@ -19,6 +19,8 @@ import TTT.commons.communication.Error;
 
 public class PathFollower extends Thread implements MovementListener, ConfigListener{
 	private ArrayList<Pose> waypoints;
+	private ArrayList<String> frontUS;
+	private ArrayList<String> backUS;
 	private Navigator nav;
 	private BasicOdometry odo;
 

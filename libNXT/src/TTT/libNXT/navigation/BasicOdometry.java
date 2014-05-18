@@ -116,6 +116,7 @@ public class BasicOdometry extends Thread implements ConfigListener, MessageList
 //		System.out.println(currentLeftCount + " " + currentRightCount);
 
 		this.distance = (currentLeftCount + currentRightCount)/2;
+//		this.conn.send(new Error("(" + currentLeftCount + " + " + currentRightCount + ")/2 = " + this.distance));
 		//this.conn.send(new Error("Distance " + this.distance));
 		this.orient = (currentLeftCount - currentRightCount);
 		this.fireCodeursChanged(this.distance,this.orient);
@@ -172,10 +173,14 @@ public class BasicOdometry extends Thread implements ConfigListener, MessageList
 
 	public synchronized void setCurrentPose(Pose p){
 		this.currentPosition = new Pose(p);
+		this.firePoseChanged(p);
+	}
+
+	public void resetPose(Pose p){
+		this.setCurrentPose(p);
 		if(p.getHeading() == 0){
 			this.initTachos();
 		}
-		this.firePoseChanged(p);
 	}
 
 	public synchronized Pose getCurrentPose(){
@@ -214,7 +219,8 @@ public class BasicOdometry extends Thread implements ConfigListener, MessageList
 	@Override
 	public void messageReceived(Message m){
 		if(m.getId() == SetPoseMsg.ID){
-			this.setCurrentPose(((SetPoseMsg)m).getPose());
+			Pose p = ((SetPoseMsg)m).getPose();
+			this.resetPose(p);
 		}
 	}
 }

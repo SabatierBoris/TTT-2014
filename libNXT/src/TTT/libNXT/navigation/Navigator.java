@@ -79,6 +79,7 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 		angularAccelSpeed	= Double.parseDouble(conf.get("nav.angularAccelSpeed","0.1"));
 		angularAccelSpeed	= Double.parseDouble(conf.get("nav.angularDeccelSpeed","0.1"));
 
+
 		this.movementListeners = new ArrayList<MovementListener>();
 
 		conf.addConfigListener(this,"nav");
@@ -174,6 +175,7 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 
 	public void moveForward(int distance){
 		synchronized(this){
+			USBConnexion conn = USBConnexion.getInstance();
 			this.changeState(MovingAction.FORWARD);
 			this.accelState = MovingState.ACCEL;
 			this.targetDistance += distance*this.odo.getCoefD();
@@ -217,6 +219,7 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 		int angularSpeed= (int)Math.round(angle);
 		int currentLinearSpeed = 0;
 		int signe = 1;
+		int usDetection = 255;
 
 		if(direction != MovingAction.FORWARD && direction != MovingAction.BACKWARD){
 			return;
@@ -317,6 +320,7 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 
 //					conn.send(new Error("ANGLE : " + angleLeft));
 //					conn.send(new Error("DISTANCE : " + distanceLeft));
+//					conn.send(new Error(this.targetDistance + " - " + this.currentDistance + " = " + distanceLeft));
 /*
 					if(this.accelState == MovingState.ACCEL){
 						conn.send(new Error("ACCEL"));
