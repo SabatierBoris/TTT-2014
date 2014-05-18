@@ -35,7 +35,9 @@ public class Node {
 	}
 
 	public void linkNode(Node node){
-		this.nodesLinked.add(node);
+		if(!this.nodesLinked.contains(node)){
+			this.nodesLinked.add(node);
+		}
 	}
 
 	public void setTravel(Integer value){

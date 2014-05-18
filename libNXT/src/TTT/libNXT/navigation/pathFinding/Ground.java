@@ -9,6 +9,10 @@ import TTT.libNXT.configuration.Configurateur;
 
 import TTT.libNXT.navigation.BasicOdometry;
 
+//TODO Remove
+import TTT.libNXT.communication.USBConnexion;
+import TTT.commons.communication.Error;
+
 public class Ground implements ConfigListener {
 	private int groundLength;
 	private int groundWidth;
@@ -82,6 +86,7 @@ public class Ground implements ConfigListener {
 	public void initObstacles(){
 		this.addObstacle(new Obstacle(150,750,300,700,this.graph)); //yellow box
 		this.addObstacle(new Obstacle(150,2250,300,700,this.graph)); //red box
+		this.addObstacle(new Obstacle(350,2250,600,300,this.graph)); //red box
 
 		/*
 		 * TODO
@@ -104,32 +109,50 @@ public class Ground implements ConfigListener {
 	 * Verification, ajout, suppression des liens entre le robot est les differents obstacle
 	 */
 	public void checkPoseLink(){
+		//USBConnexion conn = USBConnexion.getInstance();
+		//Add interconnected link
 		for(Obstacle ob1: this.obstacles){
 			for(Obstacle ob2: this.obstacles){
 				if(ob2 != ob1){
 					for(Node n1: ob1.getNodes()){
 						for(Node n2: ob2.getNodes()){
-							if(ob2.isCrossedBy(n1,n2)){
+							boolean intersect = false;
+							for(Obstacle ob3: this.obstacles){
+								if(ob3.isCrossedBy(n1,n2)){
+									intersect = true;
+									break;
+								}
+							}
+							//TODO Debug
+							if(intersect == true){
+								//conn.send(new Error("KO " + n1.getPosition() + " - " + n2.getPosition()));
 								//Remove Link
 								n1.unlinkNode(n2);
 								n2.unlinkNode(n1);
 							}else{
+								//conn.send(new Error("OK " + n1.getPosition() + " - " + n2.getPosition()));
 								//Add Link
 								n1.linkNode(n2);
 								n2.linkNode(n1);
 							}
 						}
-						/*
-						if(ob2.isCrossedBy(this.currentPose,n)){
-							//Remove link
-							this.currentPose.unlinkNode(n);
-							n.unlinkNode(this.currentPose);
-						}else{
-							//Add link
-							this.currentPose.linkNode(n);
-							n.linkNode(this.currentPose);
-						}	
-						*/
+					}
+				}
+			}
+		}
+		//Remove link with inside node
+		for(Obstacle ob1: this.obstacles){
+			for(Obstacle ob2: this.obstacles){
+				if(ob2 != ob1){
+					for(Node n1: ob1.getNodes()){
+						if(ob2.haveInside(n1)){
+							//conn.send(new Error(n1.getPosition() + " is inside"));
+							for(Node n2: ob2.getNodes()){
+								//Remove Link
+								n1.unlinkNode(n2);
+								n2.unlinkNode(n1);
+							}
+						}
 					}
 				}
 			}

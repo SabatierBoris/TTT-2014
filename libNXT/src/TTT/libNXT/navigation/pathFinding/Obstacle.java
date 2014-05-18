@@ -4,6 +4,10 @@ import java.util.ArrayList;
 
 import TTT.commons.navigation.Point;
 
+//TODO Remove
+import TTT.libNXT.communication.USBConnexion;
+import TTT.commons.communication.Error;
+
 public class Obstacle {
 	private ArrayList<Node> nodes;
 	private Node n1;
@@ -47,52 +51,120 @@ public class Obstacle {
 		return this.nodes;
 	}
 
+	public boolean haveInside(Node n){
+		Point p = n.getPosition();
+		Point A,B;
+		Point[] points = {this.n1.getPosition(),
+					 this.n2.getPosition(),
+					 this.n3.getPosition(),
+					 this.n4.getPosition()};
+		int len = points.length;
+		for(int i=0;i<len;i++){
+			A =  points[i];
+			if(i == len-1){
+				B = points[0];
+			}else{
+				B = points[i+1];
+			}
+			double d_x = B.getX() - A.getX();
+			double d_y = B.getY() - A.getY();
+			double t_x = p.getX() - A.getX();
+			double t_y = p.getY() - A.getY();
+			if((d_x*t_y - d_y*t_x)>0){
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public boolean isCrossedBy(Node start, Node end){
+		Point pStart = start.getPosition();
+		Point pEnd = end.getPosition();
+		Point[] i = {this.intersect(start,end,this.n1,this.n2),
+					 this.intersect(start,end,this.n2,this.n3),
+					 this.intersect(start,end,this.n3,this.n4),
+					 this.intersect(start,end,this.n4,this.n1)};
+
+		//TODO Debug
+		/*
+		USBConnexion conn = USBConnexion.getInstance();
+		conn.send(new Error("+++++++++++++++++++"));
+		conn.send(new Error("<" + this + "> " + this.n1.getPosition() + " - " + this.n2.getPosition() + " = " + i[0]));
+		conn.send(new Error("<" + this + "> " + this.n2.getPosition() + " - " + this.n3.getPosition() + " = " + i[1]));
+		conn.send(new Error("<" + this + "> " + this.n3.getPosition() + " - " + this.n4.getPosition() + " = " + i[2]));
+		conn.send(new Error("<" + this + "> " + this.n4.getPosition() + " - " + this.n1.getPosition() + " = " + i[3]));
+		conn.send(new Error("+++++++++++++++++++"));
+		*/
+
+		for(Point p: i){
+			//if(p != null && p.substract(start).getDistance() > 1 && p.substract(end).getDistance() > 1){
+			if(p != null && !p.equals(pStart) && !p.equals(pEnd)){
+				return true;
+			}
+		}
+
+		/*
+		if(i2 != null && !i2.equals(start) && !i2.equals(end)){
+			return true;
+		}
+		if(i3 != null && !i3.equals(start) && !i3.equals(end)){
+			return true;
+		}
+		if(i4 != null && !i4.equals(start) && !i4.equals(end)){
+			return true;
+		}
+		*/
+		return false;
+/*
+
 		if(this.intersect(start,end,this.n1,this.n2) || this.intersect(start,end,this.n2,this.n3) || this.intersect(start,end,this.n3,this.n4) || this.intersect(start,end,this.n4,this.n1)){
 			return true;
 		}
 		return false;
+*/
 	}
 
-	public boolean intersect(Node n0, Node n1, Node n2, Node n3){
+	public Point intersect(Node n0, Node n1, Node n2, Node n3){
 		Point p0 = n0.getPosition();
 		Point p1 = n1.getPosition();
 		Point p2 = n2.getPosition();
 		Point p3 = n3.getPosition();
 
-		long s10_x = Math.round(p1.getX() - p0.getX());
-		long s10_y = Math.round(p1.getY() - p0.getY());
+		double s10_x = p1.getX() - p0.getX();
+		double s10_y = p1.getY() - p0.getY();
 
-		long s32_x = Math.round(p3.getX() - p2.getX());
-		long s32_y = Math.round(p3.getY() - p2.getY());
+		double s32_x = p3.getX() - p2.getX();
+		double s32_y = p3.getY() - p2.getY();
 
-		long denom = (s10_x * s32_y) - (s32_x * s10_y);
+		double denom = (s10_x * s32_y) - (s32_x * s10_y);
 
 		if(denom == 0){
-			return false;
+			return null;
 		}
 
 		boolean denom_is_positive = (denom > 0);
 
-		long s02_x = Math.round(p0.getX() - p2.getX());
-		long s02_y = Math.round(p0.getY() - p2.getY());
+		double s02_x = p0.getX() - p2.getX();
+		double s02_y = p0.getY() - p2.getY();
 
-		long s_numer = (s10_x*s02_y)-(s02_x*s10_y);
+		double s_numer = (s10_x*s02_y)-(s02_x*s10_y);
 
 		if((s_numer < 0) == denom_is_positive){
-			return false;
+			return null;
 		}
 
-		long t_numer = (s32_x*s02_y)-(s02_x*s32_y);
+		double t_numer = (s32_x*s02_y)-(s02_x*s32_y);
 
 		if((t_numer < 0) == denom_is_positive){
-			return false;
+			return null;
 		}
 
 		if(((s_numer > denom) == denom_is_positive) || ((t_numer > denom) == denom_is_positive)){
-			return false;
+			return null;
 		}
 
-		return true;
+		double t = t_numer / denom;
+
+		return new Point(p0.getX() + t*s10_x,p0.getY() + t*s10_y);
 	}
 }
