@@ -31,15 +31,18 @@ public class RemoteUSMonitor extends Thread implements USMonitor, MessageListene
 	@Override
 	public ArrayList<String> getNamesSensors(){
 		this.sensors = null;
-		this.conn.send(new USMonitorGetSensors());
 		synchronized(this){
-			while(!this.isInterrupted() && this.sensors == null){
+			while(!this.isInterrupted() && this.sensors == null && this.conn.isConnected()){
 				try{
-					this.wait();
+					this.conn.send(new USMonitorGetSensors());
+					this.wait(500);
 				} catch(InterruptedException e){
 					this.interrupt();
 				}
 			}
+		}
+		if(this.sensors == null){
+			return null;
 		}
 		return this.sensors.getSensorsNames();
 	}
@@ -47,11 +50,11 @@ public class RemoteUSMonitor extends Thread implements USMonitor, MessageListene
 	@Override
 	public Integer getData(String name){
 		this.value = null;
-		this.conn.send(new USMonitorGetValue(name));
 		synchronized(this){
 			while(!this.isInterrupted() && this.value == null && this.conn.isConnected()){
 				try{
-					this.wait();
+					this.conn.send(new USMonitorGetValue(name));
+					this.wait(500);
 				} catch(InterruptedException e){
 					this.interrupt();
 				}
