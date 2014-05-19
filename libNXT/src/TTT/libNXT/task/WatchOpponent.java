@@ -18,8 +18,6 @@ public class WatchOpponent extends Thread implements MovementListener, ConfigLis
 	private USMonitor mon;
 	private PathFollower path;
 
-	private boolean opponentDetected;
-
 	private int distanceDetection;
 
 	private MovingAction movement;
@@ -28,22 +26,27 @@ public class WatchOpponent extends Thread implements MovementListener, ConfigLis
 	private ArrayList<String> backUS;
 	private ArrayList<String> leftUS;
 	private ArrayList<String> rightUS;
+	private ArrayList<OpponentListener> listeners;
 
 	public WatchOpponent(USMonitor mon, Navigator nav, PathFollower path){
 		this.mon = mon;
 		this.path= path;
-		this.opponentDetected = false;
 		this.movement = MovingAction.STOP;
 		this.frontUS = new ArrayList<String>();
 		this.backUS = new ArrayList<String>();
 		this.leftUS = new ArrayList<String>();
 		this.rightUS = new ArrayList<String>();
+		this.listeners = new ArrayList<OpponentListener>();
 
 		nav.addMovementListener(this);
 
 		Configurateur conf = Configurateur.getInstance();
 		this.distanceDetection	= Integer.parseInt(conf.get("opponent.distanceDetection","15"));
 		conf.addConfigListener(this,"opponent");
+	}
+
+	public void addListener(OpponentListener l){
+		this.listeners.add(l);
 	}
 
 	public void addFrontUS(String name){
@@ -62,12 +65,10 @@ public class WatchOpponent extends Thread implements MovementListener, ConfigLis
 		this.rightUS.add(name);
 	}
 
-	public boolean isOpponentDetected(){
-		return this.opponentDetected;
-	}
-
-	public void resetOpponentDetected(){
-		this.opponentDetected = false;
+	public void fireOpponentFound(Direction dir){
+		for(OpponentListener l: this.listeners){
+			l.opponentFound(dir);
+		}
 	}
 
 	@Override
@@ -87,17 +88,21 @@ public class WatchOpponent extends Thread implements MovementListener, ConfigLis
 	@Override
 	public void run(){
 		//USBConnexion conn = USBConnexion.getInstance();
+		Direction dir;
 		ArrayList<String> sensors;
 		while(!this.isInterrupted()){
 			try{
 				synchronized(this){
 					sensors = null;
+					dir = null;
 					if(this.movement == MovingAction.STOP){
 						//Nothing to do
 						sensors = null;
 					}else if(this.movement == MovingAction.FORWARD){
+						dir = Direction.FRONT;
 						sensors = this.frontUS;
 					}else if(this.movement == MovingAction.BACKWARD){
+						dir = Direction.BACK;
 						sensors = this.backUS;
 					}else if(this.movement == MovingAction.TURNLEFT){
 						sensors = this.rightUS;
@@ -108,12 +113,25 @@ public class WatchOpponent extends Thread implements MovementListener, ConfigLis
 						int val = 255;
 						for(String name: sensors){
 							int tmp = this.mon.getData(name);
-							//conn.send(new Error(name + " : " + tmp));
 							val = Math.min(val,tmp);
 						}
 						if(val < this.distanceDetection){
+							if(dir == null){
+								int val2 = 255;
+								for(String name: this.frontUS){
+									int tmp = this.mon.getData(name);
+									val2 = Math.min(val2,tmp);
+								}
+								if(val2 <= val){
+									dir = Direction.FRONT;
+								}else{
+									dir = Direction.BACK;
+								}
+
+							}
+							this.fireOpponentFound(dir);
 							//conn.send(new Error("STOP !!!"));
-							this.opponentDetected = true;
+							//TODO Add in pathFollower
 							this.path.clearPath();
 						}
 					}

@@ -3,22 +3,24 @@ package TTT.libNXT.navigation.pathFinding;
 import java.util.ArrayList;
 
 import TTT.commons.navigation.Point;
+import TTT.commons.navigation.Pose;
 
 import TTT.libNXT.configuration.ConfigListener;
 import TTT.libNXT.configuration.Configurateur;
 
 import TTT.libNXT.navigation.BasicOdometry;
 
+import TTT.libNXT.task.OpponentListener;
+import TTT.libNXT.task.Direction;
+
 //TODO Remove
 import TTT.libNXT.communication.USBConnexion;
 import TTT.commons.communication.Error;
 
-public class Ground implements ConfigListener {
+public class Ground implements ConfigListener, OpponentListener {
 	private int groundLength;
 	private int groundWidth;
 	private int botSize;
-	private int opponentSize;
-//TODO	private int nbOpponent;
 
 	private ArrayList<Obstacle> obstacles;
 	private Obstacle opponent;
@@ -28,6 +30,8 @@ public class Ground implements ConfigListener {
 	private Node currentPose;
 	private BasicOdometry odo;
 
+	private boolean needToUpdate;
+
 	public Ground(BasicOdometry odo){
 		super();
 
@@ -36,8 +40,6 @@ public class Ground implements ConfigListener {
 		this.groundLength	= Integer.parseInt(conf.get("ground.groundLength","3000")); 
 		this.groundWidth	= Integer.parseInt(conf.get("ground.groundWidth","2000"));
 		this.botSize		= Integer.parseInt(conf.get("ground.botSize","200"));
-		this.opponentSize	= Integer.parseInt(conf.get("ground.opponentSize","200"));
-//TODO		this.nbOpponent		= Integer.parseInt(conf.get("ground.nbOpponent","1"));
 
 		conf.addConfigListener(this,"ground");
 
@@ -46,12 +48,26 @@ public class Ground implements ConfigListener {
 		this.obstacles = new ArrayList<Obstacle>();
 		this.graph = new Graph();
 
-		//this.currentPose = new Node(this.odo.getCurrentPose().getLocation());
-		//this.graph.addNode(this.currentPose);
+		this.needToUpdate = true;
+		this.currentPose = new Node(this.odo.getCurrentPose().getLocation());
+		this.graph.addNode(this.currentPose);
+
+		this.opponent = new Obstacle(-500,-500,this.botSize,this.botSize,this.graph);
 
 		this.initObstacles();
-		this.checkPoseLink();
-		this.checkObstaclesLink();
+		this.update();
+	}
+
+	@Override
+	public void opponentFound(Direction dir){
+		Pose p = this.odo.getCurrentPose();
+		if(dir == Direction.FRONT){
+			p.move(this.botSize);
+		}else{
+			p.move(-this.botSize);
+		}
+		this.needToUpdate = true;
+		this.opponent.moveCenter(p.getLocation());
 	}
 
 	@Override
@@ -62,10 +78,6 @@ public class Ground implements ConfigListener {
 			this.groundWidth = Integer.parseInt(value);
 		}else if(key.equals("ground.botSize")){
 			this.botSize = Integer.parseInt(value);
-		}else if(key.equals("ground.opponentSize")){
-			this.opponentSize = Integer.parseInt(value);
-//TODO		}else if(key.equals("ground.nbOpponent")){
-//TODO			this.nbOpponent = Integer.parseInt(value);
 		}else{
 			//TODO Erreur
 		}
@@ -84,85 +96,74 @@ public class Ground implements ConfigListener {
 	}
 
 	public void initObstacles(){
+		//TODO Add size bot
 		this.addObstacle(new Obstacle(150,750,300,700,this.graph)); //yellow box
 		this.addObstacle(new Obstacle(150,2250,300,700,this.graph)); //red box
 		this.addObstacle(new Obstacle(350,2250,600,300,this.graph)); //red box
 
-		/*
-		 * TODO
-		this.opponent = new Obstacle(-500,-500,this.opponentSize,this.opponentSize,this.graph);
 		this.addObstacle(this.opponent);
-		*/
 	}
 
 	public void update(){
-		/*
-		Point current = this.odo.getCurrentPose().getLocation();
-		if(!current.equals(this.currentPose.getPosition())){
-			this.currentPose.updatePosition(current);
+		if(this.needToUpdate == true){
+			this.needToUpdate = false;
 			this.checkPoseLink();
+			this.checkObstaclesLink();
 		}
-		*/
+	}
+
+	public void linkANode(Node n){
+		Point p = n.getPosition();
+		boolean intersect;
+		for(Obstacle ob1: this.obstacles){
+			if((!ob1.getNodes().contains(n) && ob1.haveInside(n)) || p.getX() < 0 || p.getX() > this.groundWidth || p.getY() < 0 || p.getY() > this.groundLength){
+				for(Node n2: this.graph.getNodes()){
+					n2.unlinkNode(n);
+					n.unlinkNode(n2);
+				}
+			}else{
+				for(Node n2: ob1.getNodes()){
+					if(n2 != n){
+						intersect = false;
+						for(Obstacle ob2: this.obstacles){
+							if(ob2.isCrossedBy(n,n2)){
+								intersect = true;
+								break;
+							}
+						}
+						if(intersect == false){
+							intersect = (ob1.getNodes().contains(n) && !ob1.isSide(n,n2));
+						}
+
+						if(intersect == true){
+							n2.unlinkNode(n);
+							n.unlinkNode(n2);
+						}else{
+							n2.linkNode(n);
+							n.linkNode(n2);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	/***
 	 * Verification, ajout, suppression des liens entre le robot est les differents obstacle
 	 */
 	public void checkPoseLink(){
-		//USBConnexion conn = USBConnexion.getInstance();
-		//Add interconnected link
-		for(Obstacle ob1: this.obstacles){
-			for(Obstacle ob2: this.obstacles){
-				if(ob2 != ob1){
-					for(Node n1: ob1.getNodes()){
-						for(Node n2: ob2.getNodes()){
-							boolean intersect = false;
-							for(Obstacle ob3: this.obstacles){
-								if(ob3.isCrossedBy(n1,n2)){
-									intersect = true;
-									break;
-								}
-							}
-							//TODO Debug
-							if(intersect == true){
-								//conn.send(new Error("KO " + n1.getPosition() + " - " + n2.getPosition()));
-								//Remove Link
-								n1.unlinkNode(n2);
-								n2.unlinkNode(n1);
-							}else{
-								//conn.send(new Error("OK " + n1.getPosition() + " - " + n2.getPosition()));
-								//Add Link
-								n1.linkNode(n2);
-								n2.linkNode(n1);
-							}
-						}
-					}
-				}
-			}
-		}
-		//Remove link with inside node
-		for(Obstacle ob1: this.obstacles){
-			for(Obstacle ob2: this.obstacles){
-				if(ob2 != ob1){
-					for(Node n1: ob1.getNodes()){
-						if(ob2.haveInside(n1)){
-							//conn.send(new Error(n1.getPosition() + " is inside"));
-							for(Node n2: ob2.getNodes()){
-								//Remove Link
-								n1.unlinkNode(n2);
-								n2.unlinkNode(n1);
-							}
-						}
-					}
-				}
-			}
-		}
+		this.currentPose.updatePosition(this.odo.getCurrentPose().getLocation());
+		this.linkANode(this.currentPose);
 	}
 
 	/***
 	 * Verification, ajout, suppression des liens entre les obstracles
 	 */
 	public void checkObstaclesLink(){
-		//TODO
+		for(Obstacle ob: this.obstacles){
+			for(Node n: ob.getNodes()){
+				this.linkANode(n);
+			}
+		}
 	}
 }

@@ -15,7 +15,14 @@ public class Obstacle {
 	private Node n3;
 	private Node n4;
 
+	private int xSize;
+	private int ySize;
+
+
 	public Obstacle(int x, int y, int xSize, int ySize, Graph graph){
+		this.xSize = xSize;
+		this.ySize = ySize;
+
 		this.n1 = new Node(new Point(x+xSize/2,y+ySize/2));
 		this.n2 = new Node(new Point(x+xSize/2,y-ySize/2));
 		this.n3 = new Node(new Point(x-xSize/2,y-ySize/2));
@@ -26,7 +33,6 @@ public class Obstacle {
 		graph.addNode(this.n3);
 		graph.addNode(this.n4);
 
-		/*
 		this.n1.linkNode(this.n2);
 		this.n2.linkNode(this.n1);
 
@@ -38,7 +44,6 @@ public class Obstacle {
 
 		this.n4.linkNode(this.n1);
 		this.n1.linkNode(this.n4);
-		*/
 
 		this.nodes = new ArrayList<Node>();
 		this.nodes.add(this.n1);
@@ -47,6 +52,27 @@ public class Obstacle {
 		this.nodes.add(this.n4);
 	}
 
+	public void moveCenter(Point center){
+		this.moveCenter(center.getX(),center.getY());
+	}
+
+	public void moveCenter(double x, double y){
+		this.n1.updatePosition(new Point(x+this.xSize/2,y+this.ySize/2));
+		this.n2.updatePosition(new Point(x+this.xSize/2,y-this.ySize/2));
+		this.n3.updatePosition(new Point(x-this.xSize/2,y-this.ySize/2));
+		this.n4.updatePosition(new Point(x-this.xSize/2,y+this.ySize/2));
+	}
+
+	public boolean isSide(Node nA, Node nB){
+		return ((nA == this.n1 && nB == this.n2) ||
+			    (nA == this.n2 && nB == this.n3) ||
+			    (nA == this.n3 && nB == this.n4) ||
+			    (nA == this.n4 && nB == this.n1) ||
+			    (nA == this.n1 && nB == this.n4) ||
+			    (nA == this.n4 && nB == this.n3) ||
+			    (nA == this.n3 && nB == this.n2) ||
+			    (nA == this.n2 && nB == this.n1));
+	}
 	public ArrayList<Node> getNodes(){
 		return this.nodes;
 	}
