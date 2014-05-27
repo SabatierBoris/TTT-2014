@@ -16,6 +16,7 @@ import TTT.libNXT.communication.Connexion;
 import TTT.libNXT.communication.USBConnexion;
 import TTT.libNXT.communication.BluetoothConnexion;
 import TTT.libNXT.robot.Robot;
+import TTT.libNXT.robot.Color;
 import TTT.libNXT.sensor.HitechnicSensorAngle;
 import TTT.libNXT.task.SendPose;
 import TTT.libNXT.configuration.Configurateur;
@@ -29,6 +30,7 @@ import TTT.libNXT.navigation.pathFinding.Ground;
 
 import TTT.libNXT.ia.BasicIA;
 import TTT.libNXT.ia.Action;
+import TTT.libNXT.ia.EmptyAction;
 
 import TTT.libNXT.actuator.MirrorNXTMotor;
 
@@ -84,16 +86,27 @@ public class Walker extends Robot {
 		BasicIA ia = new BasicIA(this.odo,ground,pathFollow);
 		ia.setFunnyAction(new FunnyAction(s));
 
-		//TODO Color selection
 		Action firstWave = new FirstWave(s);
-		firstWave.addTarget(new Pose(600,800,90)); //RED
-		ia.addAction(firstWave);
 		Action fresque = new FresqueAction(this.nav);
-		fresque.addTarget(new Pose(150,1350,0)); //TODO Define real Pose
+		Action secondWave = new SecondWave(s);
+		Action goToNet = new EmptyAction("GoToNet");
+		if(this.getColor() == Color.YELLOW){
+			//YELLOW
+			firstWave.addTarget(new Pose(600,800,90)); //TODO 
+			fresque.addTarget(new Pose(150,1350,0)); //TODO
+			secondWave.addTarget(new Pose(600,2100,0)); //TODO
+			goToNet.addTarget(new Pose(600,2100,180)); //TODO
+		}else{
+			//RED
+			firstWave.addTarget(new Pose(600,800,90));
+			fresque.addTarget(new Pose(150,1350,0));
+			secondWave.addTarget(new Pose(600,2100,0)); //TODO
+			goToNet.addTarget(new Pose(600,2100,180)); //TODO
+		}
+		ia.addAction(firstWave);
 		ia.addAction(fresque);
-		//Action secondWave = new SecondWave(s);
-		//Action goToNet = new EmptyAction("GoToNet");
-		//END TODO
+		ia.addAction(secondWave);
+		ia.addAction(goToNet);
 
 		WatchOpponent watch = new WatchOpponent(cacheUsMon,this.nav,pathFollow);
 
@@ -183,7 +196,12 @@ public class Walker extends Robot {
 		*/
 
 		//TODO Do the color difference
-		this.odo.resetPose(new Pose(135,224,0));//RED
+		if(this.getColor() == Color.YELLOW){
+			this.odo.resetPose(new Pose(135,224,0));//TODO
+		}else{
+			//RED
+			this.odo.resetPose(new Pose(135,224,0));//RED
+		}
 		//END TODO
 	}
 

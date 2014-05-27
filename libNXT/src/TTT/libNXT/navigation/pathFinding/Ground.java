@@ -90,12 +90,10 @@ public class Ground implements ConfigListener, OpponentListener {
 	}
 
 	public void initObstacles(){
-		//TODO Add size bot
 		this.addObstacle(new Obstacle(150,750,300+this.botSize,700+this.botSize,this.graph)); //yellow box
-		//this.addObstacle(new Obstacle(150,2250,300,700,this.graph)); //red box
-		//this.addObstacle(new Obstacle(350,2250,600,300,this.graph)); //red box
+		this.addObstacle(new Obstacle(150,2250,300+this.botSize,700+this.botSize,this.graph)); //red box
 
-		//this.addObstacle(this.opponent);
+		this.addObstacle(this.opponent);
 	}
 
 	public void update(){
