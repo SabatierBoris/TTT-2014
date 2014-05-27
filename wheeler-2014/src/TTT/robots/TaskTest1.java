@@ -51,7 +51,7 @@ public class TaskTest1 extends Thread implements PoseListener, MessageListener, 
 
 	private int n;
 
-	public TaskTest1(BasicOdometry odo, NXTMotor m1, NXTMotor m2){
+	public TaskTest1(BasicOdometry odo, NXTMotor m1, NXTMotor m2, Connexion conn){
 		super();
 		this.n = 0;
 		this.travelDistance = 0;
@@ -61,7 +61,7 @@ public class TaskTest1 extends Thread implements PoseListener, MessageListener, 
 		this.state = MovingAction.STOP;
 		this.m1 = m1;
 		this.m2 = m2;
-		this.conn = Connexion.getInstance();
+		this.conn = conn;
 		this.conn.addMessageListener(this,Battery.ID);
 
 		Configurateur conf = Configurateur.getInstance();

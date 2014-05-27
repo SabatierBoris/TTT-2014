@@ -4,10 +4,6 @@ import java.util.ArrayList;
 
 import TTT.commons.navigation.Point;
 
-//TODO Remove
-import TTT.libNXT.communication.USBConnexion;
-import TTT.commons.communication.Error;
-
 public class Obstacle {
 	private ArrayList<Node> nodes;
 	private Node n1;
@@ -111,17 +107,6 @@ public class Obstacle {
 					 this.intersect(start,end,this.n3,this.n4),
 					 this.intersect(start,end,this.n4,this.n1)};
 
-		//TODO Debug
-		/*
-		USBConnexion conn = USBConnexion.getInstance();
-		conn.send(new Error("+++++++++++++++++++"));
-		conn.send(new Error("<" + this + "> " + this.n1.getPosition() + " - " + this.n2.getPosition() + " = " + i[0]));
-		conn.send(new Error("<" + this + "> " + this.n2.getPosition() + " - " + this.n3.getPosition() + " = " + i[1]));
-		conn.send(new Error("<" + this + "> " + this.n3.getPosition() + " - " + this.n4.getPosition() + " = " + i[2]));
-		conn.send(new Error("<" + this + "> " + this.n4.getPosition() + " - " + this.n1.getPosition() + " = " + i[3]));
-		conn.send(new Error("+++++++++++++++++++"));
-		*/
-
 		for(Point p: i){
 			//if(p != null && p.substract(start).getDistance() > 1 && p.substract(end).getDistance() > 1){
 			if(p != null && !p.equals(pStart) && !p.equals(pEnd)){
@@ -141,13 +126,6 @@ public class Obstacle {
 		}
 		*/
 		return false;
-/*
-
-		if(this.intersect(start,end,this.n1,this.n2) || this.intersect(start,end,this.n2,this.n3) || this.intersect(start,end,this.n3,this.n4) || this.intersect(start,end,this.n4,this.n1)){
-			return true;
-		}
-		return false;
-*/
 	}
 
 	public Point intersect(Node n0, Node n1, Node n2, Node n3){

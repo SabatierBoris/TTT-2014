@@ -161,7 +161,7 @@ public class BasicOdometry extends Thread implements ConfigListener, MessageList
 	}
 
 	private void firePoseChanged(Pose p){
-		//this.conn.send(new Error(this.toString() + "-" + p.toString()));
+//		this.conn.send(new Error(this.toString() + "-" + p.toString()));
 		for(PoseListener listener : this.poseListeners){
 			listener.poseChanged(new Pose(p));
 		}

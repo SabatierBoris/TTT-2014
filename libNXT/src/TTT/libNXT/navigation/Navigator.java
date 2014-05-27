@@ -15,8 +15,8 @@ import TTT.commons.communication.TurnMsg;
 import TTT.commons.communication.StopMsg;
 
 //TODO Remove
-import TTT.libNXT.communication.USBConnexion;
-import TTT.commons.communication.Error;
+//import TTT.libNXT.communication.USBConnexion;
+//import TTT.commons.communication.Error;
 
 public class Navigator extends Thread implements CodeursListener, ConfigListener, MessageListener {
 	private MovingAction state;
@@ -93,6 +93,10 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 		for(MovementListener listener : this.movementListeners){
 			listener.movementChange(movement);
 		}
+	}
+
+	public MovingAction getState(){
+		return this.state;
 	}
 
 	public void addMovementListener(MovementListener listener){
@@ -175,7 +179,6 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 
 	public void moveForward(int distance){
 		synchronized(this){
-			USBConnexion conn = USBConnexion.getInstance();
 			this.changeState(MovingAction.FORWARD);
 			this.accelState = MovingState.ACCEL;
 			this.targetDistance += distance*this.odo.getCoefD();
@@ -308,7 +311,7 @@ public class Navigator extends Thread implements CodeursListener, ConfigListener
 		long diffTime = System.currentTimeMillis();;
 		int distanceLeft;
 		int angleLeft;
-		USBConnexion conn = USBConnexion.getInstance();
+		//USBConnexion conn = USBConnexion.getInstance();
 		while(!this.isInterrupted()){
 			try{
 				synchronized(this){

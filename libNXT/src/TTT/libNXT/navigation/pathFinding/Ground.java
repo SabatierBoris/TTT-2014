@@ -13,10 +13,6 @@ import TTT.libNXT.navigation.BasicOdometry;
 import TTT.libNXT.task.OpponentListener;
 import TTT.libNXT.task.Direction;
 
-//TODO Remove
-import TTT.libNXT.communication.USBConnexion;
-import TTT.commons.communication.Error;
-
 public class Ground implements ConfigListener, OpponentListener {
 	private int groundLength;
 	private int groundWidth;
@@ -28,9 +24,8 @@ public class Ground implements ConfigListener, OpponentListener {
 	private Graph graph;
 
 	private Node currentPose;
+	private Node target;
 	private BasicOdometry odo;
-
-	private boolean needToUpdate;
 
 	public Ground(BasicOdometry odo){
 		super();
@@ -48,11 +43,13 @@ public class Ground implements ConfigListener, OpponentListener {
 		this.obstacles = new ArrayList<Obstacle>();
 		this.graph = new Graph();
 
-		this.needToUpdate = true;
 		this.currentPose = new Node(this.odo.getCurrentPose().getLocation());
 		this.graph.addNode(this.currentPose);
 
 		this.opponent = new Obstacle(-500,-500,this.botSize,this.botSize,this.graph);
+
+		this.target = new Node(new Point(-500,-500));
+		this.graph.addNode(this.target);
 
 		this.initObstacles();
 		this.update();
@@ -66,7 +63,6 @@ public class Ground implements ConfigListener, OpponentListener {
 		}else{
 			p.move(-this.botSize);
 		}
-		this.needToUpdate = true;
 		this.opponent.moveCenter(p.getLocation());
 	}
 
@@ -78,8 +74,6 @@ public class Ground implements ConfigListener, OpponentListener {
 			this.groundWidth = Integer.parseInt(value);
 		}else if(key.equals("ground.botSize")){
 			this.botSize = Integer.parseInt(value);
-		}else{
-			//TODO Erreur
 		}
 	}
 
@@ -97,18 +91,52 @@ public class Ground implements ConfigListener, OpponentListener {
 
 	public void initObstacles(){
 		//TODO Add size bot
-		this.addObstacle(new Obstacle(150,750,300,700,this.graph)); //yellow box
-		this.addObstacle(new Obstacle(150,2250,300,700,this.graph)); //red box
-		this.addObstacle(new Obstacle(350,2250,600,300,this.graph)); //red box
+		this.addObstacle(new Obstacle(150,750,300+this.botSize,700+this.botSize,this.graph)); //yellow box
+		//this.addObstacle(new Obstacle(150,2250,300,700,this.graph)); //red box
+		//this.addObstacle(new Obstacle(350,2250,600,300,this.graph)); //red box
 
-		this.addObstacle(this.opponent);
+		//this.addObstacle(this.opponent);
 	}
 
 	public void update(){
-		if(this.needToUpdate == true){
-			this.needToUpdate = false;
-			this.checkPoseLink();
-			this.checkObstaclesLink();
+		this.checkPoseLink();
+		this.checkObstaclesLink();
+	}
+
+	public ArrayList<Pose> getPathTo(Pose p){
+		if(p == null){
+			return null;
+		}
+		this.target.updatePosition(p.getLocation());
+		this.linkTargetToPose();
+		this.linkANode(this.target);
+		ArrayList<Node> path = this.graph.getPath(this.currentPose,this.target);
+		if(path == null){
+			return null;
+		}
+		path.remove(path.size()-1);//Remove the last one (target)
+		ArrayList<Pose> res = new ArrayList<Pose>();
+		for(Node n: path){
+			res.add(new Pose(n.getPosition()));
+		}
+		res.add(p); //Add the target (with orientation)
+		return res;
+	}
+
+	public void linkTargetToPose(){
+		boolean intersect = false;
+		for(Obstacle ob: this.obstacles){
+			if(ob.isCrossedBy(this.currentPose, this.target)){
+				intersect = true;
+				break;
+			}
+		}
+		if(intersect == true){
+			this.currentPose.unlinkNode(this.target);
+			this.target.unlinkNode(this.currentPose);
+		}else{
+			this.currentPose.linkNode(this.target);
+			this.target.linkNode(this.currentPose);
 		}
 	}
 
@@ -124,11 +152,16 @@ public class Ground implements ConfigListener, OpponentListener {
 			}else{
 				for(Node n2: ob1.getNodes()){
 					if(n2 != n){
-						intersect = false;
-						for(Obstacle ob2: this.obstacles){
-							if(ob2.isCrossedBy(n,n2)){
-								intersect = true;
-								break;
+						p = n2.getPosition();
+						if(p.getX() < 0 || p.getX() > this.groundWidth || p.getY() < 0 || p.getY() > this.groundLength){
+							intersect = true;
+						}else{
+							intersect = false;
+							for(Obstacle ob2: this.obstacles){
+								if(ob2.isCrossedBy(n,n2)){
+									intersect = true;
+									break;
+								}
 							}
 						}
 						if(intersect == false){

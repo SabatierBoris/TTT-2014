@@ -1,4 +1,4 @@
-package TTT.robots.actions;
+package TTT.robots.actuators;
 
 import lejos.robotics.RegulatedMotor;
 
@@ -34,17 +34,17 @@ public class Arm{
 	}
 
 	public void goToZero(){
-		System.out.println("Goto Zero");
+		//System.out.println("Goto Zero");
 		this.goTo(-35);
 	}
 	
 	public void goToMin(){
-		System.out.println("Goto Min");
+		//System.out.println("Goto Min");
 		this.goTo(0);
 	}
 
 	public void goToMax(){
-		System.out.println("Goto Max");
+		//System.out.println("Goto Max");
 		this.goTo(-350);
 	}
 

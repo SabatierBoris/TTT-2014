@@ -14,8 +14,8 @@ import TTT.libNXT.navigation.MovementListener;
 import TTT.libNXT.navigation.MovingAction;
 
 //TODO Remove
-import TTT.libNXT.communication.USBConnexion;
-import TTT.commons.communication.Error;
+//import TTT.libNXT.communication.USBConnexion;
+//import TTT.commons.communication.Error;
 
 public class PathFollower extends Thread implements MovementListener, ConfigListener{
 	private ArrayList<Pose> waypoints;
@@ -23,6 +23,8 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 	private ArrayList<String> backUS;
 	private Navigator nav;
 	private BasicOdometry odo;
+
+	private ArrayList<PathListener> listeners;
 
 	private PathFollowAction previousAction;
 
@@ -35,6 +37,7 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 		this.nav = nav;
 		this.waypoints = new ArrayList<Pose>();
 		this.previousAction = PathFollowAction.STOP;
+		this.listeners = new ArrayList<PathListener>();
 
 		Configurateur conf = Configurateur.getInstance();
 		this.distancePrecision	= Double.parseDouble(conf.get("pathFollow.distancePrecision","10"));
@@ -44,10 +47,29 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 		conf.addConfigListener(this,"pathFollow");
 	}
 
+	public void addListener(PathListener listener){
+		this.listeners.add(listener);
+	}
+
+	public void changeAction(PathFollowAction action){
+		this.previousAction = action;
+		for(PathListener listener: this.listeners){
+			listener.actionChanged(action);
+		}
+	}
+
 	public void clearPath(){
 		this.nav.stopMoving();
 		synchronized(this.waypoints){
 			this.waypoints.clear();
+		}
+	}
+
+	public void addWayPoints(ArrayList<Pose> waypoints){
+		//USBConnexion conn = USBConnexion.getInstance();
+		for(Pose waypoint: waypoints){
+			//conn.send(new Error("Add waypoint " + waypoint));
+			this.addWayPoint(waypoint);
 		}
 	}
 
@@ -56,6 +78,10 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 			this.waypoints.add(waypoint);
 			this.waypoints.notify();
 		}
+	}
+
+	public boolean isEmpty(){
+		return this.waypoints.isEmpty();
 	}
 
 	@Override
@@ -78,7 +104,7 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 
 	@Override
 	public void run(){
-		USBConnexion conn = USBConnexion.getInstance();
+		//USBConnexion conn = USBConnexion.getInstance();
 		boolean wait;
 		while(!this.isInterrupted()){
 			try{
@@ -89,6 +115,7 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 						Pose current = this.odo.getCurrentPose();
 						Pose sub = waypoint.substract(current);
 						double distance = sub.getDistance();
+						
 						/*
 						conn.send(new Error("==================================="));
 						conn.send(new Error("PATH : waypoint " + waypoint));
@@ -97,7 +124,7 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 						*/
 
 						if(this.previousAction == PathFollowAction.STOP){
-							this.previousAction = PathFollowAction.PRETURN;
+							this.changeAction(PathFollowAction.PRETURN);
 							//SHOULD I PRETURN ?
 							Point diff = sub.getLocation();
 							double angle;
@@ -138,7 +165,7 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 								wait=false;
 							}
 						}else if(this.previousAction == PathFollowAction.PRETURN){
-							this.previousAction = PathFollowAction.MOVE;
+							this.changeAction(PathFollowAction.MOVE);
 							if(distance > this.distancePrecision){
 								//Je suis dans la bonne direction
 								// J'avance
@@ -148,7 +175,7 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 								wait=false;
 							}
 						}else if(this.previousAction == PathFollowAction.MOVE){
-							this.previousAction = PathFollowAction.POSTTURN;
+							this.changeAction(PathFollowAction.POSTTURN);
 							if(this.waypoints.size() == 1 && Math.abs(waypoint.getHeading()-current.getHeading()) > this.anglePrecision){
 								//Si c'est mon dernier waypoint et que je n'ai pas le bon angle
 								//Turn
@@ -171,12 +198,12 @@ public class PathFollower extends Thread implements MovementListener, ConfigList
 						}else{
 //							conn.send(new Error("PATH : Pop"));
 							this.waypoints.remove(0);
-							this.previousAction = PathFollowAction.STOP;
+							this.changeAction(PathFollowAction.STOP);
 							wait=false;
 						}
 					}else{
 //						conn.send(new Error("PATH : Nothing to do"));
-						this.previousAction = PathFollowAction.STOP;
+						this.changeAction(PathFollowAction.STOP);
 					}
 					if(wait == true){
 						this.waypoints.wait();

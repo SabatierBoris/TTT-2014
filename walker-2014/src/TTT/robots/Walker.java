@@ -8,7 +8,9 @@ import lejos.nxt.TouchSensor;
 import lejos.nxt.UltrasonicSensor;
 import lejos.robotics.Touch;
 
-import lejos.robotics.MirrorMotor;
+import TTT.commons.navigation.Pose;
+
+import TTT.commons.communication.Error;
 
 import TTT.libNXT.communication.Connexion;
 import TTT.libNXT.communication.USBConnexion;
@@ -20,28 +22,50 @@ import TTT.libNXT.configuration.Configurateur;
 import TTT.libNXT.navigation.BasicOdometry;
 import TTT.libNXT.navigation.TankAsservise;
 import TTT.libNXT.navigation.Navigator;
+import TTT.libNXT.navigation.MovingAction;
+
+import TTT.libNXT.navigation.PathFollower;
+import TTT.libNXT.navigation.pathFinding.Ground;
+
+import TTT.libNXT.ia.BasicIA;
+import TTT.libNXT.ia.Action;
 
 import TTT.libNXT.actuator.MirrorNXTMotor;
 
-import TTT.libNXT.task.USMonitor;
-import TTT.libNXT.task.PingResponse;
+import TTT.libNXT.task.WatchOpponent;
+import TTT.libNXT.task.RemoteUSMonitor;
+import TTT.libNXT.task.CacheUSMonitor;
+//import TTT.libNXT.task.PingResponse;
 import TTT.libNXT.task.FixLinearAsserv;
-import TTT.libNXT.task.FixAngularAsserv;
+//import TTT.libNXT.task.FixAngularAsserv;
 import TTT.libNXT.task.SendAsservInfo;
 
-import TTT.robots.actions.SligShot;
+import TTT.robots.actuators.SligShot;
+import TTT.robots.actions.FunnyAction;
+import TTT.robots.actions.FirstWave;
+import TTT.robots.actions.FresqueAction;
+import TTT.robots.actions.SecondWave;
 
 public class Walker extends Robot {
 
 	private BasicOdometry odo;
 	private Configurateur conf;
 	private Touch starter;
+	private Navigator nav;
 
 	public Walker(){
 		super(90000l);
+		//this.selectColor();
+
+		SligShot s = new SligShot(Motor.C);
+		s.init();
 
 		Connexion usb = USBConnexion.getInstance();
 		BluetoothConnexion bluetooth = BluetoothConnexion.getInstance();
+		byte[] pin = {(byte)'0',(byte)'4',(byte)'0',(byte)'5'};
+		bluetooth.setMaster();
+		bluetooth.setName("SENSORS");
+		bluetooth.setPin(pin);
 
 		this.starter = new TouchSensor(SensorPort.S3);
 
@@ -49,91 +73,123 @@ public class Walker extends Robot {
 		this.conf.setConn(usb);
 		this.conf.setName("Walker");
 
-		this.odo = new BasicOdometry(new HitechnicSensorAngle(SensorPort.S1), new HitechnicSensorAngle(SensorPort.S2));
-		TankAsservise asserv = new TankAsservise(this.odo, new NXTMotor(MotorPort.A), new MirrorNXTMotor(MotorPort.B));
-		Navigator nav = new Navigator(this.odo,asserv);
-		BluetoothConnexion blue = BluetoothConnexion.getInstance();
-		byte[] pin = {(byte)'0',(byte)'4',(byte)'0',(byte)'5'};
+		RemoteUSMonitor usMon = new RemoteUSMonitor(bluetooth);
+		CacheUSMonitor cacheUsMon = new CacheUSMonitor(usMon);
 
-		bluetooth.setMaster();
-		bluetooth.setName("SENSORS");
-		bluetooth.setPin(pin);
-		
+		this.odo = new BasicOdometry(new HitechnicSensorAngle(SensorPort.S1), new HitechnicSensorAngle(SensorPort.S2),usb);
+		TankAsservise asserv = new TankAsservise(this.odo, new NXTMotor(MotorPort.A), new MirrorNXTMotor(MotorPort.B));
+		this.nav = new Navigator(this.odo,asserv,usb);
+		PathFollower pathFollow = new PathFollower(this.nav,this.odo);
+		Ground ground = new Ground(this.odo);
+		BasicIA ia = new BasicIA(this.odo,ground,pathFollow);
+		ia.setFunnyAction(new FunnyAction(s));
+
+		//TODO Color selection
+		Action firstWave = new FirstWave(s);
+		firstWave.addTarget(new Pose(600,800,90)); //RED
+		ia.addAction(firstWave);
+		Action fresque = new FresqueAction(this.nav);
+		fresque.addTarget(new Pose(150,1350,0)); //TODO Define real Pose
+		ia.addAction(fresque);
+		//Action secondWave = new SecondWave(s);
+		//Action goToNet = new EmptyAction("GoToNet");
+		//END TODO
+
+		WatchOpponent watch = new WatchOpponent(cacheUsMon,this.nav,pathFollow);
+
+		watch.addFrontUS("FRONT-LEFT");
+		watch.addFrontUS("FRONT-RIGHT");
+		watch.addBackUS("BACK-LEFT");
+		watch.addBackUS("BACK-RIGHT");
+		watch.addLeftUS("FRONT-LEFT");
+		watch.addLeftUS("BACK-LEFT");
+		watch.addRightUS("FRONT-RIGHT");
+		watch.addRightUS("BACK-RIGHT");
+
 		this.addTask(this.conf);
 		this.addTask(usb);
 		this.addTask(bluetooth);
 
 		this.addTask(this.odo);
 		this.addTask(asserv);
-		this.addTask(nav);
+		this.addTask(this.nav);
+		this.addTask(pathFollow);
+	
+//		this.addTask(watch);
+//		this.addTask(usMon);
+//		this.addTask(cacheUsMon);
+		
+		this.setIA(ia);
 
-		this.addTask(new FixLinearAsserv(asserv,usb));
-		this.addTask(new FixAngularAsserv(asserv,usb));
-		this.addTask(new SendAsservInfo(asserv,usb));
+//		this.addTask(new FixLinearAsserv(asserv,usb));
+//		this.addTask(new FixAngularAsserv(asserv,usb));
+//		this.addTask(new SendAsservInfo(asserv,usb));
+//		this.addTask(new SendPose(this.odo,usb));
+//		this.addTask(new TaskTest3(nav,usb,ground));
+//		this.addTask(new TaskTest4(usb,pathFollow));
+//		this.addTask(new TaskTestUS(cacheUsMon,usb));
 
-		this.addTask(new TaskTest3(nav,usb));
-		this.addTask(new TaskTestUS());
-
-		/* TEST US */
-		/*
-		USMonitor usMon = new USMonitor();
-		//usMon.addSensor("RIGHT",new UltrasonicSensor(SensorPort.S1));
-		usMon.addSensor("LEFT",new UltrasonicSensor(SensorPort.S4));
-
-		this.addTask(usMon);
-		*/
-
-
-		/* TEST SLIGSHOT */
-/*
-		SligShot s = new SligShot(Motor.C);
-
-
-		System.out.println("Init");
-		s.init();
-		try{
-			Thread.sleep(90000);
-		}catch(InterruptedException e){
-		}
-
-		System.out.println("Throw Bottom");
-		s.throwBottom();
-		try{
-			Thread.sleep(2000);
-		}catch(InterruptedException e){
-		}
-
-		System.out.println("Throw Top");
-		s.throwTop();
-		try{
-			Thread.sleep(2000);
-		}catch(InterruptedException e){
-		}
-
-		System.out.println("Throw Net");
-		s.throwNet();
-		try{
-			Thread.sleep(2000);
-		}catch(InterruptedException e){
-		}
-
-		System.out.println("Move to Init");
-		s.moveToInit();
-		try{
-			Thread.sleep(2000);
-		}catch(InterruptedException e){
-		}
-*/
-		/* END - TEST SLIGSHOT */
 
 		//this.addTask(new TaskTest(nav));
 		//this.addTask(new TaskTest(this.odo,asserv));
-		//this.addTask(new SendPose(this.odo));
+	}
+
+	private void waitFinishMove(){
+		Pose current, newPose;
+		newPose = this.odo.getCurrentPose();
+		try{
+			do{
+				current = newPose;
+				Thread.sleep(1000);
+				newPose = this.odo.getCurrentPose();
+			}while(current.substract(newPose).getDistance() > 0);
+		}catch(InterruptedException e){
+		}
+	}
+
+	@Override
+	public void initPose(){
+		/*
+		this.nav.moveBackward(1000);
+		this.waitFinishMove();
+		this.nav.stopMoving();
+		try{
+			Thread.sleep(500);
+		}catch(InterruptedException e){
+		}
+		this.nav.moveForward(100);
+		this.waitFinishMove();
+		this.nav.stopMoving();
+		try{
+			Thread.sleep(500);
+		}catch(InterruptedException e){
+		}
+		//TODO Do the color difference
+		this.nav.turnRight(90); //RED
+		//END TODO
+		this.waitFinishMove();
+		this.nav.stopMoving();
+		try{
+			Thread.sleep(500);
+		}catch(InterruptedException e){
+		}
+		this.nav.moveBackward(1000);
+		this.waitFinishMove();
+		this.nav.stopMoving();
+		try{
+			Thread.sleep(500);
+		}catch(InterruptedException e){
+		}
+		*/
+
+		//TODO Do the color difference
+		this.odo.resetPose(new Pose(135,224,0));//RED
+		//END TODO
 	}
 
 	@Override
 	public void insertStarter(){
-		System.out.println("INSERT STARTER");
+		//System.out.println("INSERT STARTER");
 		while(!this.starter.isPressed()){
 			Thread.yield();
 		}
@@ -141,7 +197,7 @@ public class Walker extends Robot {
 
 	@Override
 	public void removeStarter(){
-		System.out.println("REMOVE STARTER");
+		//System.out.println("REMOVE STARTER");
 		while(this.starter.isPressed()){
 			Thread.yield();
 		}

@@ -14,9 +14,13 @@ public class Graph{
 	}
 
 	public void remove(Node node){
-		//TODO
-		//remove Node
 		//Remove link
+		for(Node n: node.getLinkedNodes()){
+			n.unlinkNode(node);
+			node.unlinkNode(n);
+		}
+		//Remove Node
+		this.nodes.remove(node);
 	}
 
 	public ArrayList<Node> getNodes(){

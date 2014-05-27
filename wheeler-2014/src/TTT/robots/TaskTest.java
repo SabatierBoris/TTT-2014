@@ -39,7 +39,7 @@ public class TaskTest extends Thread implements PoseListener, ConfigListener, Me
 	//TODO Remove
 	private Connexion conn;
 
-	public TaskTest(BasicOdometry odo, AbstractAsservise asserv){
+	public TaskTest(BasicOdometry odo, AbstractAsservise asserv, Connexion conn){
 		super();
 		this.walk = false;
 		this.currentLinearSpeed = 0;
@@ -48,7 +48,7 @@ public class TaskTest extends Thread implements PoseListener, ConfigListener, Me
 		this.targetPose = new Pose(0,100,0);
 		this.currentPose = new Pose();
 		//TODO Remove
-		this.conn = Connexion.getInstance();
+		this.conn = conn;
 		this.conn.addMessageListener(this,Battery.ID);
 		Configurateur conf = Configurateur.getInstance();
 		conf.addConfigListener(this,"test");

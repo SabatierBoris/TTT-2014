@@ -40,7 +40,11 @@ $(LIBNXT_TARGET):
 	@$(MAKE) -s -C $(LIBNXT_DIR) SPACE="$(SPACE) - "
 
 run: all
-	$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
+	@$(UPLOAD) $(UPLOADFLAGS) $(TARGET)
+
+debug:
+	@echo "$(SPACE)DEBUGING Information : ";
+	@read buff; nxjdebugtool -di ExceptionAnalyse.nxd -c -m $${buff}
 
 $(TARGET): $(CLASS) $(LIBNXT_TARGET)
 
